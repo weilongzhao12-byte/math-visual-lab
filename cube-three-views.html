@@ -768,7 +768,8 @@
     const left=Array.from({length:N},(_,z)=>Math.max(...Array.from({length:N},(_,x)=>heights[x][z])));
     drawGridView(
       document.getElementById('leftCanvas'),N,maxH,
-      (c,r)=>(maxH-r)<=left[N-1-c],null
+      // 从模型左侧向右观察时，屏幕横向与 z 轴同向；不要再次镜像。
+      (c,r)=>(maxH-r)<=left[c],null
     );
 
     drawGridView(
