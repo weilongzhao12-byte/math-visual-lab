@@ -1,4 +1,4 @@
-const CACHE='math-visual-lab-v2-4-1-r2';
+const CACHE='math-visual-lab-v2-4-1-r3';
 const CACHE_PREFIX='math-visual-lab-';
 const LOCAL=['./','./index.html','./cube-three-views.html','./water-container.html','./cross-section.html','./cube-net.html','./solid-revolution.html','./functions.html','./quadratic.html','./unit-circle.html','./conic-sections.html','./space-vectors.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./vendor/three.min.js','./vendor/OrbitControls.js'];
 
@@ -16,9 +16,17 @@ self.addEventListener('activate',event=>{
   self.clients.claim();
 });
 
+async function matchCached(request){
+  const direct=await caches.match(request);
+  if(direct||request.mode!=='navigate')return direct;
+  const path=new URL(request.url).pathname;
+  const leaf=path.split('/').pop();
+  if(leaf&&!leaf.includes('.'))return caches.match(`.${path}.html`);
+}
+
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET'||new URL(event.request.url).origin!==self.location.origin)return;
-  event.respondWith(caches.match(event.request).then(cached=>cached||
+  event.respondWith(matchCached(event.request).then(cached=>cached||
     fetch(event.request).then(response=>{
       if(response.ok){
         const copy=response.clone();
