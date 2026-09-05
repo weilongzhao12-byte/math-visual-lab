@@ -4,7 +4,7 @@
   const X=10,Y=10,BLUE='#2563eb',ORANGE='#f97316';
   const configs={
     linear:{label:'一次函数',params:{k:{name:'斜率 k',v:1,min:-5,max:5,step:.1},b:{name:'截距 b',v:0,min:-8,max:8,step:.1}}},
-    quadratic:{label:'二次函数',params:{a:{name:'开口与伸缩 a',v:1,min:-3,max:3,step:.1},h:{name:'水平平移 h',v:0,min:-7,max:7,step:.1},k:{name:'垂直平移 k',v:0,min:-8,max:8,step:.1}}},
+    quadratic:{label:'二次函数',params:{a:{name:'二次项系数 a',v:1,min:-3,max:3,step:.1},b:{name:'一次项系数 b',v:0,min:-8,max:8,step:.1},c:{name:'常数项 c',v:0,min:-8,max:8,step:.1},h:{name:'水平平移 h',v:0,min:-7,max:7,step:.1},k:{name:'垂直平移 k',v:0,min:-8,max:8,step:.1}}},
     inverse:{label:'反比例函数',params:{k:{name:'比例系数 k',v:4,min:-10,max:10,step:.1}}},
     abs:{label:'绝对值函数',params:{a:{name:'方向与伸缩 a',v:1,min:-4,max:4,step:.1},h:{name:'水平平移 h',v:0,min:-6,max:6,step:.1},k:{name:'垂直平移 k',v:0,min:-6,max:6,step:.1}}},
     exp:{label:'指数函数',params:{a:{name:'倍数 a',v:1,min:-4,max:4,step:.1},b:{name:'底数 b',v:2,min:.2,max:4,step:.1},c:{name:'垂直平移 c',v:0,min:-6,max:6,step:.1}}},
@@ -30,7 +30,7 @@
   function evaluate(state,x){
     const v=state.values;
     if(state.type==='linear')return v.k*x+v.b;
-    if(state.type==='quadratic')return v.a*(x-v.h)*(x-v.h)+v.k;
+    if(state.type==='quadratic'){const u=x-v.h;return v.a*u*u+v.b*u+v.c+v.k}
     if(state.type==='inverse')return Math.abs(x)<1e-8?NaN:v.k/x;
     if(state.type==='abs')return v.a*Math.abs(x-v.h)+v.k;
     if(state.type==='exp')return v.a*Math.pow(v.b,x)+v.c;
@@ -41,7 +41,7 @@
   function formulaFor(state,index){
     const v=state.values,y=index===1?'y₁':'y₂';
     if(state.type==='linear')return`${y} = ${fmt(v.k)}x ${signed(v.b)}`;
-    if(state.type==='quadratic')return`${y} = ${fmt(v.a)}(x ${v.h>=0?'−':'+'} ${fmt(Math.abs(v.h))})² ${signed(v.k)}`;
+    if(state.type==='quadratic')return`${y} = ${fmt(v.a)}(x ${v.h>=0?'−':'+'} ${fmt(Math.abs(v.h))})² ${signed(v.b)}(x ${v.h>=0?'−':'+'} ${fmt(Math.abs(v.h))}) ${signed(v.c)} ${signed(v.k)}`;
     if(state.type==='inverse')return`${y} = ${fmt(v.k)} / x`;
     if(state.type==='abs')return`${y} = ${fmt(v.a)}|x ${v.h>=0?'−':'+'} ${fmt(Math.abs(v.h))}| ${signed(v.k)}`;
     if(state.type==='exp')return`${y} = ${fmt(v.a)}·${fmt(v.b)}ˣ ${signed(v.c)}`;
@@ -78,10 +78,11 @@
       if(Math.abs(v.a)<1e-8){
         setStats([[`y = ${fmt(v.k)}`,'已退化为常量函数'],['—','最低点 / 最高点'],['—','对称轴'],['a 不能为 0','恢复二次函数']],'将 a 调整为非零数值即可恢复抛物线。h 控制左右平移，k 控制上下平移。');return;
       }
-      const b=-2*v.a*v.h,c=v.a*v.h*v.h+v.k;
+      const vertexX=v.h-v.b/(2*v.a),vertexY=v.c+v.k-v.b*v.b/(4*v.a);
+      const expandedB=v.b-2*v.a*v.h,expandedC=v.a*v.h*v.h-v.b*v.h+v.c+v.k;
       setStats([[
-        `(${fmt(v.h)}, ${fmt(v.k)})`,v.a>0?'最低点（顶点）':'最高点（顶点）'
-      ],[`x = −b/(2a) = ${fmt(v.h)}`,'对称轴公式与位置'],[v.a>0?'向上':'向下','开口方向'],[`b=${fmt(b)}，c=${fmt(c)}`,'展开式 ax²+bx+c']],'顶点式 y=a(x−h)²+k：h 控制水平平移，k 控制垂直平移；图中虚线为对称轴。');
+        `(${fmt(vertexX)}, ${fmt(vertexY)})`,v.a>0?'最低点（顶点）':'最高点（顶点）'
+      ],[`x = h − b/(2a) = ${fmt(vertexX)}`,'对称轴公式与位置'],[v.a>0?'向上':'向下','开口方向'],[`B=${fmt(expandedB)}，C=${fmt(expandedC)}`,'展开后 ax²+Bx+C']],'保留 a、b、c，并用 h、k 将原二次函数整体水平、垂直平移；图中虚线为对称轴。');
     }else if(primary.type==='inverse'){
       setStats([[v.k>0?'Ⅰ、Ⅲ象限':v.k<0?'Ⅱ、Ⅳ象限':'x 轴','主要分布'],['x = 0','竖直渐近线'],['y = 0','水平渐近线'],[fmt(v.k),'比例系数 k']],'反比例函数在 x=0 处没有定义，图像分成两支曲线。');
     }else if(primary.type==='abs'){
@@ -131,11 +132,11 @@
 
   function drawQuadraticGuide(){
     if(primary.type!=='quadratic'||Math.abs(primary.values.a)<1e-8)return;
-    const {a,h,k}=primary.values;if(Math.abs(h)<=X){
-      ctx.save();ctx.setLineDash([10,8]);ctx.strokeStyle='rgba(37,99,235,.55)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx(h),0);ctx.lineTo(sx(h),canvas.height);ctx.stroke();ctx.restore();
-      ctx.fillStyle='#1d4ed8';ctx.font='600 15px system-ui';ctx.textAlign='left';ctx.fillText(`对称轴 x = ${fmt(h)}`,Math.min(canvas.width-150,sx(h)+8),42);
+    const {a,b,c,h,k}=primary.values,vertexX=h-b/(2*a),vertexY=c+k-b*b/(4*a);if(Math.abs(vertexX)<=X){
+      ctx.save();ctx.setLineDash([10,8]);ctx.strokeStyle='rgba(37,99,235,.55)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx(vertexX),0);ctx.lineTo(sx(vertexX),canvas.height);ctx.stroke();ctx.restore();
+      ctx.fillStyle='#1d4ed8';ctx.font='600 15px system-ui';ctx.textAlign='left';ctx.fillText(`对称轴 x = ${fmt(vertexX)}`,Math.min(canvas.width-150,sx(vertexX)+8),42);
     }
-    labelPoint(h,k,`${a>0?'最低点':'最高点'} (${fmt(h)}, ${fmt(k)})`,BLUE,-22);
+    labelPoint(vertexX,vertexY,`${a>0?'最低点':'最高点'} (${fmt(vertexX)}, ${fmt(vertexY)})`,BLUE,-22);
   }
 
   function difference(x){return evaluate(primary,x)-evaluate(secondary,x)}

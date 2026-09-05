@@ -1,4 +1,4 @@
-const CACHE='math-visual-lab-v2-4-1-r4';
+const CACHE='math-visual-lab-v2-4-1-r5';
 const CACHE_PREFIX='math-visual-lab-';
 const LOCAL=['./','./index.html','./cube-three-views.html','./water-container.html','./cross-section.html','./cube-net.html','./solid-revolution.html','./functions.html','./functions-lab.js','./quadratic.html','./unit-circle.html','./conic-sections.html','./space-vectors.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./vendor/three.min.js','./vendor/OrbitControls.js'];
 
