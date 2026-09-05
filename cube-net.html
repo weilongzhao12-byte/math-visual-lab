@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>立方体展开图实验室 · 铰链折叠版</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#d8e1eb;--accent:#2563eb;--shadow:0 8px 26px rgba(18,38,65,.07)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text)}
+body{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,input{font:inherit}
+button{min-height:42px;border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 10px;font-weight:650;color:var(--text);cursor:pointer;touch-action:manipulation}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}button:disabled{opacity:.45;cursor:not-allowed}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.page{min-height:100vh;padding:10px;display:grid;grid-template-columns:330px minmax(0,1fr);gap:10px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.side{padding:16px;overflow:auto;max-height:calc(100vh - 20px)}
+.stage{padding:12px;min-height:690px}
+.back{display:inline-block;text-decoration:none;color:var(--accent);font-size:12px;font-weight:700;margin-bottom:10px}
+.title{font-size:20px;margin:0 0 5px}.sub,.note{font-size:11px;line-height:1.65;color:var(--muted)}
+.counter{font-size:24px;font-weight:850;text-align:center;padding:6px}
+.result{padding:9px;border-radius:11px;border:1px solid var(--line);background:#f8fafc;text-align:center;font-weight:800;margin:9px 0}
+.result.ok{background:#ecfdf3;color:#166534;border-color:#bbf7d0}.result.bad{background:#fff1f2;color:#9f1239;border-color:#fecdd3}
+.gridBtns,.playBtns{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.section{margin-top:13px}.section h2{font-size:13px;margin:0 0 8px}
+.note{border:1px solid #edf1f5;background:#f8fafc;border-radius:10px;padding:8px;margin-top:9px}
+.progressHead{display:flex;justify-content:space-between;font-size:11px;margin:8px 0 5px}
+.faceEditor{display:grid;gap:6px}
+.faceRow{display:grid;grid-template-columns:28px 42px minmax(0,1fr);gap:6px;align-items:center}
+.faceBadge{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-weight:850;border:1px solid #cbd5e1}
+.faceRow input[type=color]{width:42px;height:34px;padding:2px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.faceRow input[type=text]{width:100%;height:34px;border:1px solid var(--line);border-radius:8px;padding:5px 8px;min-width:0}
+.work{display:grid;grid-template-columns:minmax(320px,.88fr) minmax(0,1.12fr);gap:12px;align-items:stretch;height:100%}
+.netWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:12px;background:#fbfdff;padding:12px}
+.netGrid{display:grid;grid-template-columns:repeat(6,58px);grid-template-rows:repeat(6,58px);gap:3px;touch-action:manipulation}
+.cell{width:58px;height:58px;border:1px dashed #cbd5e1;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;color:#172033;cursor:pointer;padding:3px;text-align:center;overflow:hidden}
+.cell.on{border-style:solid;border-width:2px}
+.preview{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#f8fbff;min-height:640px}
+.preview #three{position:absolute;inset:0}.preview canvas{width:100%!important;height:100%!important;display:block;touch-action:none}
+.tip{position:absolute;left:10px;top:10px;z-index:5;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:10.5px;color:var(--muted);pointer-events:none}
+.status3d{position:absolute;left:10px;bottom:10px;z-index:5;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:10.5px;color:#344054;pointer-events:none}
+@media(max-width:980px){.page{grid-template-columns:285px 1fr}.work{grid-template-columns:1fr}.preview{min-height:490px}.netGrid{grid-template-columns:repeat(6,48px);grid-template-rows:repeat(6,48px)}.cell{width:48px;height:48px}}
+@media(max-width:720px){.page{display:flex;flex-direction:column;padding:8px}.stage{order:1;min-height:0}.side{order:2;max-height:none}.work{display:flex;flex-direction:column}.preview{min-height:440px}.netGrid{grid-template-columns:repeat(6,min(13vw,48px));grid-template-rows:repeat(6,min(13vw,48px));gap:2px}.cell{width:min(13vw,48px);height:min(13vw,48px);font-size:11px}button{min-height:44px}}
+</style>
+</head>
+<body>
+<div class="page">
+<aside class="panel side">
+<a class="back" href="./index.html">← 返回实验室</a>
+<h1 class="title">立方体展开图实验室</h1>
+<div class="sub">画出 6 个面后，可以观看真正沿共享边逐面翻折成立方体的过程。相邻面在整个动画中始终连接，每个面还能自定义颜色和文字。</div>
+
+<div class="counter"><span id="count">0</span> / 6 面</div>
+<div id="result" class="result">请选择 6 个相连正方形</div>
+
+<div class="gridBtns">
+<button id="prev">上一种展开图</button><button id="next">下一种展开图</button>
+<button id="random" class="primary">随机有效展开图</button><button id="clear">清空重做</button>
+</div>
+
+<div class="section">
+<h2>动态折叠</h2>
+<div class="playBtns"><button id="play" class="primary" disabled>▶ 开始折叠</button><button id="resetFold" disabled>↺ 展开复位</button></div>
+<div class="progressHead"><span>折叠进度</span><b id="progressText">0%</b></div>
+<input id="progress" type="range" min="0" max="100" step="1" value="0" disabled>
+</div>
+
+<div class="section">
+<h2>六个面自定义</h2>
+<div id="faceEditor" class="faceEditor"></div>
+</div>
+
+<div class="note">文字和颜色会同时显示在二维展开图和3D折叠面上。折叠时每个面都绕与父面的共享边转动，不再独立飞向目标位置。</div>
+<div class="note">立方体有 11 种本质不同的展开图（旋转、翻转视为同一种）。</div>
+</aside>
+
+<section class="panel stage">
+<div class="work">
+<div class="netWrap"><div id="net" class="netGrid" aria-label="展开图网格"></div></div>
+<div class="preview">
+<div class="tip">拖动旋转视角 · 滚轮 / 双指缩放 · 相邻面始终沿共享边连接</div>
+<div id="three"></div>
+<div id="status3d" class="status3d">平面展开状态</div>
+</div>
+</div>
+</section>
+</div>
+
+<script src="./vendor/three.min.js"></script>
+<script src="./vendor/OrbitControls.js"></script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const grid=$('net');
+const defaults=[
+  {color:'#ef4444',text:'A'},{color:'#f59e0b',text:'B'},{color:'#22c55e',text:'C'},
+  {color:'#06b6d4',text:'D'},{color:'#3b82f6',text:'E'},{color:'#a855f7',text:'F'}
+];
+const faceCfg=defaults.map(v=>({...v}));
+const presets=[[[0,0],[0,1],[0,2],[1,1],[2,1],[3,1]],[[0,0],[0,1],[0,2],[1,2],[1,3],[1,4]],[[0,0],[0,1],[1,1],[1,2],[1,3],[2,1]],[[0,0],[0,1],[1,1],[1,2],[1,3],[2,2]],[[0,0],[0,1],[1,1],[1,2],[1,3],[2,3]],[[0,0],[0,1],[1,1],[1,2],[2,1],[3,1]],[[0,0],[0,1],[1,1],[1,2],[2,2],[2,3]],[[0,0],[0,1],[1,1],[2,1],[2,2],[3,1]],[[0,0],[0,1],[1,1],[2,1],[3,1],[3,2]],[[0,1],[1,0],[1,1],[1,2],[1,3],[2,1]],[[0,1],[1,0],[1,1],[1,2],[1,3],[2,2]]];
+
+let selected=new Set(),presetIndex=0,cellEls=[];
+let foldProgress=0,playing=false,playStart=0,playStartProgress=0;
+let currentValidation=null,faceObjects=[];
+
+for(let y=0;y<6;y++)for(let x=0;x<6;x++){
+  const b=document.createElement('button');b.type='button';b.className='cell';
+  b.dataset.x=x;b.dataset.y=y;b.setAttribute('aria-label',`第${y+1}行第${x+1}列`);
+  b.addEventListener('click',()=>toggle(x,y));grid.appendChild(b);cellEls.push(b);
+}
+function buildFaceEditor(){
+  const wrap=$('faceEditor');wrap.innerHTML='';
+  faceCfg.forEach((cfg,i)=>{
+    const row=document.createElement('div');row.className='faceRow';
+    const badge=document.createElement('div');badge.className='faceBadge';badge.textContent=String.fromCharCode(65+i);badge.style.background=cfg.color+'33';badge.style.borderColor=cfg.color;
+    const color=document.createElement('input');color.type='color';color.value=cfg.color;color.setAttribute('aria-label',`面${i+1}颜色`);
+    const text=document.createElement('input');text.type='text';text.maxLength=12;text.value=cfg.text;text.placeholder=`面 ${String.fromCharCode(65+i)} 文字`;text.setAttribute('aria-label',`面${i+1}文字`);
+    color.addEventListener('input',()=>{cfg.color=color.value;badge.style.background=cfg.color+'33';badge.style.borderColor=cfg.color;render()});
+    text.addEventListener('input',()=>{cfg.text=text.value||String.fromCharCode(65+i);render()});
+    row.append(badge,color,text);wrap.appendChild(row);
+  });
+}
+buildFaceEditor();
+
+function key(x,y){return x+','+y}
+function toggle(x,y){
+  playing=false;
+  const k=key(x,y);
+  if(selected.has(k))selected.delete(k);else if(selected.size<6)selected.add(k);
+  foldProgress=0;$('progress').value=0;render();
+}
+function neg(v){return v.map(x=>-x)}
+function orientNext(o,d){
+  const[n,r,u]=o;
+  if(d==='R')return[r,neg(n),u];
+  if(d==='L')return[neg(r),n,u];
+  if(d==='U')return[u,r,neg(n)];
+  return[neg(u),r,n];
+}
+function equalO(a,b){return JSON.stringify(a)===JSON.stringify(b)}
+function validate(){
+  if(selected.size!==6)return{valid:false,msg:'请选择 6 个正方形'};
+  const cells=new Set(selected),start=[...cells][0];
+  const ori=new Map([[start,[[0,0,1],[1,0,0],[0,1,0]]]]);
+  const depth=new Map([[start,0]]);
+  const parent=new Map([[start,null]]);
+  const parentDir=new Map([[start,null]]);
+  const order=[start];
+  const queue=[start],dirs=[[1,0,'R'],[-1,0,'L'],[0,-1,'U'],[0,1,'D']];
+  while(queue.length){
+    const cur=queue.shift(),[x,y]=cur.split(',').map(Number),o=ori.get(cur);
+    for(const[dx,dy,d]of dirs){
+      const nb=key(x+dx,y+dy);if(!cells.has(nb))continue;
+      const no=orientNext(o,d);
+      if(ori.has(nb)){
+        if(!equalO(ori.get(nb),no))return{valid:false,msg:'这个组合折叠时会发生方向冲突'};
+      }else{
+        ori.set(nb,no);
+        depth.set(nb,depth.get(cur)+1);
+        parent.set(nb,cur);
+        parentDir.set(nb,d);
+        order.push(nb);
+        queue.push(nb);
+      }
+    }
+  }
+  if(ori.size!==6)return{valid:false,msg:'6 个正方形必须彼此相连'};
+  const normals=[...ori.values()].map(o=>o[0].join(','));
+  if(new Set(normals).size!==6)return{valid:false,msg:'折叠后有两个面会重合，不能成立方体'};
+  return{valid:true,msg:'✓ 可以折成立方体',orientations:ori,depth,parent,parentDir,order,start};
+}
+
+/* ---------- Three.js ---------- */
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xf8fbff);
+const camera=new THREE.PerspectiveCamera(40,1,.1,100);camera.position.set(7,5.5,8);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+$('three').appendChild(renderer.domElement);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=3;controls.maxDistance=22;
+scene.add(new THREE.HemisphereLight(0xffffff,0xb7c2d2,1.1));
+const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(7,10,8);scene.add(dl);
+const group=new THREE.Group();scene.add(group);
+const cubeGuide=new THREE.LineSegments(
+  new THREE.EdgesGeometry(new THREE.BoxGeometry(3,3,3)),
+  new THREE.LineBasicMaterial({color:0x64748b,transparent:true,opacity:0})
+);
+cubeGuide.position.z=-1.5;scene.add(cubeGuide);
+
+const faceSize=3, cubeHalf=1.5;
+let faceNodes=new Map(), hingeNodes=[];
+
+function disposeObj(o){
+  o.traverse?.(c=>{
+    c.geometry?.dispose?.();
+    if(c.material){
+      if(Array.isArray(c.material))c.material.forEach(m=>{m.map?.dispose?.();m.dispose?.()});
+      else{c.material.map?.dispose?.();c.material.dispose?.()}
+    }
+  });
+}
+function clear3d(){
+  while(group.children.length){
+    const o=group.children.pop();disposeObj(o);
+  }
+  faceObjects=[];faceNodes=new Map();hingeNodes=[];
+}
+function makeFaceTexture(cfg){
+  const c=document.createElement('canvas');c.width=512;c.height=512;const ctx=c.getContext('2d');
+  ctx.fillStyle=cfg.color;ctx.fillRect(0,0,512,512);
+  ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(18,18,476,476);
+  ctx.strokeStyle='rgba(15,23,42,.82)';ctx.lineWidth=16;ctx.strokeRect(8,8,496,496);
+  let text=(cfg.text||'').trim();if(!text)text=' ';
+  let size=text.length<=2?190:text.length<=4?130:text.length<=7?92:68;
+  ctx.fillStyle='#0f172a';ctx.font=`800 ${size}px system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  const parts=text.length>7?[text.slice(0,7),text.slice(7,14)]:[text];
+  if(parts.length===1)ctx.fillText(parts[0],256,262);
+  else{ctx.fillText(parts[0],256,215);ctx.fillText(parts[1],256,315)}
+  const tex=new THREE.CanvasTexture(c);
+  tex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+  return tex;
+}
+function makeFaceMesh(cfg){
+  const tex=makeFaceTexture(cfg);
+  const mat=new THREE.MeshPhongMaterial({map:tex,side:THREE.DoubleSide,shininess:42});
+  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(faceSize,faceSize),mat);
+  const edge=new THREE.LineSegments(
+    new THREE.EdgesGeometry(mesh.geometry),
+    new THREE.LineBasicMaterial({color:0x0f172a,transparent:true,opacity:.98})
+  );
+  edge.renderOrder=4;mesh.add(edge);
+  return mesh;
+}
+function hingeSpec(dir){
+  if(dir==='R')return{edge:new THREE.Vector3(cubeHalf,0,0),child:new THREE.Vector3(cubeHalf,0,0),axis:'y',sign:1};
+  if(dir==='L')return{edge:new THREE.Vector3(-cubeHalf,0,0),child:new THREE.Vector3(-cubeHalf,0,0),axis:'y',sign:-1};
+  if(dir==='U')return{edge:new THREE.Vector3(0,cubeHalf,0),child:new THREE.Vector3(0,cubeHalf,0),axis:'x',sign:-1};
+  return{edge:new THREE.Vector3(0,-cubeHalf,0),child:new THREE.Vector3(0,-cubeHalf,0),axis:'x',sign:1};
+}
+function makeNode(key,cfg){
+  const node=new THREE.Group();
+  const mesh=makeFaceMesh(cfg);
+  node.add(mesh);
+  node.userData={key,mesh};
+  faceObjects.push(mesh);
+  faceNodes.set(key,node);
+  return node;
+}
+function rebuild3d(res){
+  clear3d();
+  const keys=[...selected];if(!keys.length)return;
+  const cfgByKey=new Map(keys.map((k,i)=>[k,faceCfg[i]||faceCfg[0]]));
+
+  if(!res.valid){
+    const rootKey=keys[0],[rx,ry]=rootKey.split(',').map(Number);
+    keys.forEach(k=>{
+      const [x,y]=k.split(',').map(Number);
+      const node=makeNode(k,cfgByKey.get(k));
+      node.position.set((x-rx)*faceSize,(ry-y)*faceSize,0);
+      group.add(node);
+    });
+    applyFold();return;
+  }
+
+  // 根面固定；所有其余面通过“共享边铰链”挂到父面上。
+  const rootNode=makeNode(res.start,cfgByKey.get(res.start));
+  group.add(rootNode);
+
+  for(const k of res.order.slice(1)){
+    const pKey=res.parent.get(k),dir=res.parentDir.get(k);
+    const parentNode=faceNodes.get(pKey);
+    const spec=hingeSpec(dir);
+
+    const hinge=new THREE.Group();
+    hinge.position.copy(spec.edge);
+    hinge.userData={
+      key:k,dir,axis:spec.axis,sign:spec.sign,
+      depth:res.depth.get(k)||1
+    };
+    parentNode.add(hinge);
+
+    const childNode=makeNode(k,cfgByKey.get(k));
+    childNode.position.copy(spec.child);
+    hinge.add(childNode);
+    hingeNodes.push(hinge);
+  }
+  applyFold();
+}
+function smooth(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}
+function applyFold(){
+  if(!currentValidation?.valid){
+    cubeGuide.material.opacity=0;
+    $('progressText').textContent='0%';
+    $('status3d').textContent='平面展开状态';
+    return;
+  }
+
+  const maxDepth=Math.max(1,...hingeNodes.map(h=>h.userData.depth||1));
+  hingeNodes.forEach(h=>{
+    const d=h.userData.depth||1;
+    // 深度越浅越先折；后续面被父铰链带着一起移动，连接关系始终保留。
+    const start=(d-1)*0.16;
+    const maxStart=(maxDepth-1)*0.16;
+    const duration=Math.max(.48,1-maxStart);
+    const t=smooth((foldProgress-start)/duration);
+    const a=h.userData.sign*(Math.PI/2)*t;
+    h.rotation.set(0,0,0);
+    if(h.userData.axis==='x')h.rotation.x=a;
+    else h.rotation.y=a;
+  });
+
+  cubeGuide.material.opacity=Math.max(0,(foldProgress-.76)/.24)*.48;
+  $('progressText').textContent=Math.round(foldProgress*100)+'%';
+  $('status3d').textContent=
+    foldProgress<.01?'平面展开图：所有共享边保持连接':
+    foldProgress>.995?'折叠完成：六个面组成一个立方体':
+    '沿共享边铰接折叠 · '+Math.round(foldProgress*100)+'%';
+}
+function update3dTextures(){rebuild3d(currentValidation);}
+function render(){
+  const keys=[...selected];
+  cellEls.forEach(b=>{
+    const k=key(+b.dataset.x,+b.dataset.y),on=selected.has(k),idx=keys.indexOf(k),cfg=idx>=0?faceCfg[idx]:null;
+    b.classList.toggle('on',on);b.style.background=on?cfg.color+'33':'#fff';b.style.borderColor=on?cfg.color:'#cbd5e1';
+    b.textContent=on?(cfg.text||String.fromCharCode(65+idx)):'';
+  });
+  $('count').textContent=selected.size;
+  currentValidation=validate();
+  const r=$('result');r.textContent=currentValidation.msg;r.className='result '+(selected.size===6?(currentValidation.valid?'ok':'bad'):'');
+  $('play').disabled=!currentValidation.valid;$('resetFold').disabled=!currentValidation.valid;$('progress').disabled=!currentValidation.valid;
+  if(!currentValidation.valid){playing=false;foldProgress=0;$('progress').value=0}
+  rebuild3d(currentValidation);
+}
+function loadPreset(i){
+  playing=false;foldProgress=0;$('progress').value=0;
+  presetIndex=(i+presets.length)%presets.length;selected.clear();
+  const p=presets[presetIndex],xs=p.map(v=>v[0]),ys=p.map(v=>v[1]),ox=Math.floor((6-(Math.max(...xs)+1))/2),oy=Math.floor((6-(Math.max(...ys)+1))/2);
+  p.forEach(([x,y])=>selected.add(key(x+ox,y+oy)));render();
+}
+$('prev').onclick=()=>loadPreset(presetIndex-1);
+$('next').onclick=()=>loadPreset(presetIndex+1);
+$('random').onclick=()=>loadPreset(Math.floor(Math.random()*presets.length));
+$('clear').onclick=()=>{playing=false;selected.clear();foldProgress=0;$('progress').value=0;render()};
+$('resetFold').onclick=()=>{playing=false;foldProgress=0;$('progress').value=0;applyFold();$('play').textContent='▶ 开始折叠'};
+$('progress').addEventListener('input',e=>{playing=false;foldProgress=+e.target.value/100;applyFold();$('play').textContent=foldProgress>.995?'↻ 重新播放':'▶ 继续折叠'});
+$('play').onclick=()=>{
+  if(!currentValidation?.valid)return;
+  if(playing){playing=false;$('play').textContent='▶ 继续折叠';return}
+  if(foldProgress>.995){foldProgress=0;$('progress').value=0;applyFold()}
+  playing=true;playStart=performance.now();playStartProgress=foldProgress;$('play').textContent='Ⅱ 暂停折叠';
+};
+function resize(){const m=$('three'),r=m.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}
+window.addEventListener('resize',resize);new ResizeObserver(resize).observe($('three'));
+loadPreset(0);resize();
+function loop(now){
+  if(playing){
+    const duration=4300;
+    foldProgress=Math.min(1,playStartProgress+(now-playStart)/duration);
+    $('progress').value=Math.round(foldProgress*100);applyFold();
+    if(foldProgress>=1){playing=false;$('play').textContent='↻ 重新播放'}
+  }
+  controls.update();renderer.render(scene,camera);requestAnimationFrame(loop)
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

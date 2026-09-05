@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4f7fb" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="旋转容器与水" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <title>旋转长方体容器中的水 · 方向增强版 V2.1</title>
+  <style>
+    :root{
+      --bg:#f3f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#d7e0ea;
+      --blue:#2563eb;--cyan:#38bdf8;--soft:#eef6ff;--shadow:0 8px 30px rgba(18,38,65,.08)
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text)}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      -webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+    button,input,select{font:inherit}
+    button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+    .app{min-height:100vh;min-height:100dvh;display:grid;grid-template-columns:285px minmax(520px,1fr);gap:10px;padding:10px}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);overflow:hidden}
+    .side{padding:16px;overflow:auto;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px)}
+    h1{font-size:20px;margin:0 0 5px}
+    .sub{font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:15px}
+    h2{font-size:13px;margin:16px 0 8px}
+    .field{margin:9px 0}
+    .fieldHead{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:5px}
+    .fieldHead b{font-size:12px;color:#344054}
+    .fieldHead span{color:var(--muted)}
+    .dual{display:grid;grid-template-columns:1fr 82px;gap:8px;align-items:center}
+    input[type=range]{width:100%;accent-color:var(--blue)}
+    input[type=number]{width:100%;min-height:38px;padding:6px 8px;border:1px solid var(--line);border-radius:9px}
+    .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    button{min-height:42px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);font-weight:650;cursor:pointer}
+    button:active{transform:scale(.98)}
+    button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+    .stat{padding:10px;border:1px solid var(--line);border-radius:12px;background:#f9fbfd}
+    .stat b{display:block;font-size:17px}.stat span{font-size:10.5px;color:var(--muted)}
+    .note{font-size:11px;line-height:1.65;color:var(--muted);padding:9px 10px;background:#f8fafc;border-radius:11px;border:1px solid #edf1f5;margin-top:12px}
+    .switch{display:flex;align-items:center;justify-content:space-between;padding:9px 10px;margin-top:10px;border:1px solid var(--line);border-radius:11px;font-size:12px}
+    .switch input{width:18px;height:18px;accent-color:var(--blue)}
+
+    .stage{position:relative;height:calc(100vh - 20px);height:calc(100dvh - 20px);min-height:620px;background:linear-gradient(#f8fbff,#f4f8fc)}
+    #three{position:absolute;inset:0}
+    #three canvas{display:block;width:100%!important;height:100%!important;touch-action:none;outline:none}
+    .badge{position:absolute;left:14px;top:14px;z-index:8;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+      border:1px solid rgba(215,224,234,.95);border-radius:12px;padding:8px 11px;pointer-events:none}
+    .badge b{font-size:13px}.badge span{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
+    .modeToggle{
+      position:absolute;left:14px;top:72px;z-index:10;display:flex;gap:6px;padding:5px;
+      background:rgba(255,255,255,.93);border:1px solid var(--line);border-radius:13px;
+      box-shadow:0 4px 16px rgba(20,35,60,.07);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)
+    }
+    .modeToggle button{min-height:36px;padding:6px 10px;font-size:11px;border-radius:9px}
+    .modeToggle button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+    .quick{position:absolute;right:12px;top:12px;z-index:9;display:grid;grid-template-columns:repeat(2,45px);gap:7px}
+    .quick button{width:45px;height:45px;min-height:45px;padding:0;background:rgba(255,255,255,.92);font-size:10.5px;box-shadow:0 4px 15px rgba(20,35,60,.07)}
+    .hint{position:absolute;left:14px;bottom:14px;z-index:8;padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.9);
+      border:1px solid var(--line);font-size:10.5px;color:var(--muted);pointer-events:none}
+    .anglePanel{position:absolute;right:12px;bottom:12px;z-index:8;width:210px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.92);
+      border:1px solid var(--line);box-shadow:0 4px 16px rgba(20,35,60,.06);font-size:11px}
+    .angleRow{display:flex;justify-content:space-between;margin:3px 0;color:var(--muted)}
+    .angleRow b{color:var(--text)}
+    .orientationLegend{
+      position:absolute;left:14px;bottom:48px;z-index:8;display:flex;gap:8px;align-items:center;
+      padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.9);border:1px solid var(--line);
+      font-size:10.5px;color:var(--muted);pointer-events:none
+    }
+    .legendDot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:3px;vertical-align:-1px}
+    .frontDot{background:#fb7185;border:1px solid #be123c}
+    .backDot{background:#93c5fd;border:1px solid #1d4ed8}
+    .toast{position:absolute;left:50%;bottom:70px;z-index:20;transform:translate(-50%,10px);opacity:0;transition:.18s;
+      background:rgba(17,24,39,.88);color:#fff;padding:8px 12px;border-radius:999px;font-size:12px;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .full{position:fixed!important;inset:0!important;z-index:9999!important;width:100vw!important;height:100vh!important;height:100dvh!important;min-height:0!important;border-radius:0!important}
+
+    @media(max-width:900px){
+      .app{grid-template-columns:250px 1fr}
+      .stage{min-height:560px;height:680px}
+      .side{max-height:680px}
+    }
+    @media(max-width:760px){
+      .app{display:flex;flex-direction:column;gap:8px;padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+      .stage{order:1;height:61vh;height:61dvh;min-height:420px;max-height:680px}
+      .side{order:2;max-height:none;padding:14px}
+      .quick{right:9px;top:9px;grid-template-columns:repeat(4,40px)}
+      .quick button{width:40px;height:40px;min-height:40px}
+      .badge{left:9px;top:9px;padding:7px 9px}
+      .badge span{display:none}
+      .modeToggle{left:9px;top:57px;padding:4px}
+      .modeToggle button{min-height:38px;padding:5px 9px;font-size:10.5px}
+      .hint{display:none}
+      .orientationLegend{left:9px;bottom:54px;font-size:9.5px;padding:6px 7px}
+      .anglePanel{right:9px;bottom:9px;width:180px;font-size:10px}
+      button{min-height:44px}
+    }
+    @media(max-width:430px){
+      .quick{grid-template-columns:repeat(2,40px)}
+      .anglePanel{left:9px;right:auto;bottom:9px;width:170px}
+    }
+  </style>
+<style>.lab-home-link{position:fixed;left:max(10px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));z-index:10000;text-decoration:none;background:rgba(15,23,42,.88);color:#fff;padding:9px 12px;border-radius:999px;font:600 12px system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.15);backdrop-filter:blur(8px)}@media(max-width:760px){.lab-home-link{top:auto;bottom:max(10px,env(safe-area-inset-bottom));font-size:11px;padding:8px 10px}}</style>
+</head>
+<body>
+<a class="lab-home-link" href="./index.html">← 数学实验室</a>
+<div class="app">
+  <section class="panel side">
+    <h1>旋转容器中的水</h1>
+    <div class="sub">拖动透明密闭长方体，观察水面始终保持水平、体积始终不变时，水的几何形状怎样变化。</div>
+
+    <h2>容器尺寸（cm）</h2>
+    <div class="field">
+      <div class="fieldHead"><b>长 L</b><span id="lText">6.0 cm</span></div>
+      <div class="dual"><input id="length" type="range" min="2" max="10" step="0.5" value="6"><input id="lengthNum" type="number" min="2" max="10" step="0.5" value="6"></div>
+    </div>
+    <div class="field">
+      <div class="fieldHead"><b>宽 W</b><span id="wText">5.0 cm</span></div>
+      <div class="dual"><input id="width" type="range" min="2" max="10" step="0.5" value="5"><input id="widthNum" type="number" min="2" max="10" step="0.5" value="5"></div>
+    </div>
+    <div class="field">
+      <div class="fieldHead"><b>高 H</b><span id="hText">4.0 cm</span></div>
+      <div class="dual"><input id="height" type="range" min="2" max="10" step="0.5" value="4"><input id="heightNum" type="number" min="2" max="10" step="0.5" value="4"></div>
+    </div>
+
+    <h2>水的体积</h2>
+    <div class="field">
+      <div class="fieldHead"><b>体积 V</b><span id="vText">60.0 cm³</span></div>
+      <div class="dual"><input id="volume" type="range" min="0" max="120" step="1" value="60"><input id="volumeNum" type="number" min="0" max="120" step="1" value="60"></div>
+    </div>
+    <div class="field">
+      <div class="fieldHead"><b>装水比例</b><span id="ratioText">50%</span></div>
+      <input id="ratio" type="range" min="0" max="100" step="1" value="50">
+    </div>
+
+    <label class="switch"><span>显示重力方向</span><input id="showGravity" type="checkbox" checked></label>
+    <label class="switch"><span>显示水面轮廓</span><input id="showWaterEdge" type="checkbox" checked></label>
+    <label class="switch"><span>液态晃动与回稳</span><input id="fluidDynamics" type="checkbox" checked></label>
+
+    <div class="field">
+      <div class="fieldHead"><b>流动感强度</b><span id="sloshText">55%</span></div>
+      <input id="sloshStrength" type="range" min="0" max="100" step="1" value="55">
+    </div>
+
+    <h2>快捷操作</h2>
+    <div class="btns">
+      <button id="resetRot" class="primary">恢复水平</button>
+      <button id="randomRot">随机旋转</button>
+      <button id="fitBtn">适配画面</button>
+      <button id="fullBtn">全屏观察</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="capShape">矩形</b><span>当前水面形状</span></div>
+      <div class="stat"><b id="capSides">4 边</b><span>水面边数</span></div>
+      <div class="stat"><b id="capacity">120.0</b><span>容器容积 cm³</span></div>
+      <div class="stat"><b id="fillStat">50%</b><span>装水比例</span></div>
+    </div>
+
+    <div class="note">方向提示：粉红色边框与“前”表示容器前侧，蓝色边框与“后”表示后侧；四个角也有同色标记。这样在任意旋转角度下都更容易判断朝向。静止后水面仍严格按重力方向与体积守恒计算。</div>
+  </section>
+
+  <section class="panel stage" id="stage">
+    <div class="badge"><b>3D 透明容器</b><span>可独立旋转容器或观察视角 · 双指/滚轮缩放</span></div>
+    <div class="modeToggle">
+      <button id="containerMode" class="active">旋转容器</button>
+      <button id="viewMode">旋转视角</button>
+    </div>
+    <div class="quick">
+      <button id="frontBtn">正面</button>
+      <button id="sideBtn">侧面</button>
+      <button id="topBtn">俯视</button>
+      <button id="isoBtn">立体</button>
+    </div>
+    <div id="three"></div>
+    <div class="hint" id="interactionHint">当前：旋转容器　·　拖动改变容器姿态　·　滚轮缩放</div>
+    <div class="orientationLegend">
+      <span><i class="legendDot frontDot"></i>前侧</span>
+      <span><i class="legendDot backDot"></i>后侧</span>
+    </div>
+    <div class="anglePanel">
+      <div class="angleRow"><span>绕 X 轴</span><b id="angleX">0°</b></div>
+      <div class="angleRow"><span>绕 Y 轴</span><b id="angleY">0°</b></div>
+      <div class="angleRow"><span>绕 Z 轴</span><b id="angleZ">0°</b></div>
+    </div>
+    <div id="toast" class="toast"></div>
+  </section>
+</div>
+
+<script src="./vendor/three.min.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const mount = document.getElementById('three');
+  const stage = document.getElementById('stage');
+  const toast = document.getElementById('toast');
+
+  let L=6, W=5, H=4;
+  let targetVolume=60;
+  let showGravity=true, showWaterEdge=true;
+  let fluidDynamics=true, sloshStrength=55;
+  let interactionMode='container';
+
+  let waterMesh=null, waterEdges=null, waterSurfaceMesh=null, waterCapLine=null;
+  let containerMesh=null, containerEdges=null, gravityArrow=null;
+  let frontFrame=null, backFrame=null, frontLabel=null, backLabel=null;
+  let frontCornerMarkers=[], backCornerMarkers=[];
+
+  let cameraDistance=15;
+  let viewDir = new THREE.Vector3(9,7,11).normalize();
+  let viewYaw=Math.atan2(viewDir.x,viewDir.z);
+  let viewPitch=Math.asin(viewDir.y);
+
+  // 液体自由表面在容器局部坐标中的法向量。
+  // 它会带阻尼地追随“真实重力方向”，产生滞后与回稳效果。
+  const fluidNormalLocal=new THREE.Vector3(0,1,0);
+  const fluidVelocity=new THREE.Vector3();
+  const lastRenderedFluidNormal=new THREE.Vector3(0,1,0);
+  let lastFluidTime=performance.now();
+  let lastWaterBuild=0;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xf8fbff);
+
+  const camera = new THREE.PerspectiveCamera(38,1,.1,150);
+  const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  mount.appendChild(renderer.domElement);
+
+  scene.add(new THREE.HemisphereLight(0xffffff,0xaab7c8,1.05));
+  const light = new THREE.DirectionalLight(0xffffff,.9);
+  light.position.set(10,14,9); light.castShadow=true;
+  scene.add(light);
+
+  const floor = new THREE.Mesh(
+    new THREE.CircleGeometry(12,64),
+    new THREE.MeshStandardMaterial({color:0xeaf0f6,roughness:.95,transparent:true,opacity:.9})
+  );
+  floor.rotation.x=-Math.PI/2; floor.position.y=-5.7; floor.receiveShadow=true;
+  scene.add(floor);
+
+  const containerGroup = new THREE.Group();
+  scene.add(containerGroup);
+
+  const worldGravity = new THREE.Vector3(0,-1,0);
+  const worldUp = new THREE.Vector3(0,1,0);
+
+  const waterBodyMat=new THREE.MeshPhongMaterial({
+    color:0x38bdf8,transparent:true,opacity:.38,side:THREE.DoubleSide,
+    shininess:105,specular:0xbfefff,depthWrite:false
+  });
+
+  const waterSurfaceMat=new THREE.ShaderMaterial({
+    transparent:true,side:THREE.DoubleSide,depthWrite:false,
+    uniforms:{
+      uTime:{value:0},
+      uNormal:{value:new THREE.Vector3(0,1,0)},
+      uWave:{value:.02},
+      uColor:{value:new THREE.Color(0x67d4fb)}
+    },
+    vertexShader:`
+      uniform float uTime;
+      uniform vec3 uNormal;
+      uniform float uWave;
+      varying float vWave;
+      void main(){
+        vec3 p=position;
+        float a=sin(dot(position,vec3(1.7,2.3,1.2))*2.2 + uTime*3.0);
+        float b=sin(dot(position,vec3(-2.1,1.1,1.9))*2.8 - uTime*2.35);
+        float w=(a+b)*0.5;
+        p += normalize(uNormal)*w*uWave;
+        vWave=w;
+        gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);
+      }
+    `,
+    fragmentShader:`
+      uniform vec3 uColor;
+      varying float vWave;
+      void main(){
+        vec3 c=uColor + vec3(vWave*0.018);
+        gl_FragColor=vec4(c,0.72);
+      }
+    `
+  });
+
+  function showToast(msg){
+    toast.textContent=msg; toast.classList.add('show');
+    clearTimeout(showToast.t); showToast.t=setTimeout(()=>toast.classList.remove('show'),1200);
+  }
+
+  function boxVertices(){
+    const hx=L/2, hy=H/2, hz=W/2;
+    return [
+      new THREE.Vector3(-hx,-hy,-hz), new THREE.Vector3(hx,-hy,-hz),
+      new THREE.Vector3(-hx,hy,-hz),  new THREE.Vector3(hx,hy,-hz),
+      new THREE.Vector3(-hx,-hy,hz), new THREE.Vector3(hx,-hy,hz),
+      new THREE.Vector3(-hx,hy,hz),  new THREE.Vector3(hx,hy,hz)
+    ];
+  }
+
+  // outward winding
+  const boxFaces = [
+    [0,2,3,1], // -z
+    [4,5,7,6], // +z
+    [0,4,6,2], // -x
+    [1,3,7,5], // +x
+    [0,1,5,4], // -y
+    [2,6,7,3]  // +y
+  ];
+
+  function uniquePoints(points,eps=1e-6){
+    const out=[];
+    for(const p of points){
+      if(!out.some(q=>p.distanceToSquared(q)<eps*eps)) out.push(p.clone());
+    }
+    return out;
+  }
+
+  function clipPolyhedron(normal,c){
+    const verts=boxVertices();
+    const faces=[];
+    const cutPts=[];
+    const eps=1e-7;
+
+    for(const faceIdx of boxFaces){
+      const poly=faceIdx.map(i=>verts[i]);
+      const clipped=[];
+      for(let i=0;i<poly.length;i++){
+        const a=poly[i], b=poly[(i+1)%poly.length];
+        const da=normal.dot(a)-c, db=normal.dot(b)-c;
+        const ina=da<=eps, inb=db<=eps;
+
+        if(ina) clipped.push(a.clone());
+        if(ina!==inb){
+          const t=da/(da-db);
+          const p=a.clone().lerp(b,t);
+          clipped.push(p.clone());
+          cutPts.push(p.clone());
+        }
+      }
+      if(clipped.length>=3) faces.push(clipped);
+    }
+
+    const cap=uniquePoints(cutPts,1e-5);
+    if(cap.length>=3){
+      const cen=new THREE.Vector3();
+      cap.forEach(p=>cen.add(p)); cen.multiplyScalar(1/cap.length);
+
+      let ref=Math.abs(normal.y)<.9 ? new THREE.Vector3(0,1,0) : new THREE.Vector3(1,0,0);
+      const u=new THREE.Vector3().crossVectors(ref,normal).normalize();
+      const v=new THREE.Vector3().crossVectors(normal,u).normalize(); // u x v = normal
+      cap.sort((a,b)=>{
+        const aa=Math.atan2(v.dot(a.clone().sub(cen)),u.dot(a.clone().sub(cen)));
+        const bb=Math.atan2(v.dot(b.clone().sub(cen)),u.dot(b.clone().sub(cen)));
+        return aa-bb;
+      });
+      faces.push(cap.map(p=>p.clone()));
+    }
+
+    return {faces,cap};
+  }
+
+  function polyVolume(faces){
+    let sum=0;
+    for(const poly of faces){
+      if(poly.length<3) continue;
+      const a=poly[0];
+      for(let i=1;i<poly.length-1;i++){
+        const b=poly[i], c=poly[i+1];
+        sum += a.dot(new THREE.Vector3().crossVectors(b,c))/6;
+      }
+    }
+    return Math.abs(sum);
+  }
+
+  function cutForVolume(normal,vol){
+    const verts=boxVertices();
+    const dots=verts.map(p=>normal.dot(p));
+    let lo=Math.min(...dots)-1e-6, hi=Math.max(...dots)+1e-6;
+    const full=L*W*H;
+    if(vol<=1e-7) return {c:lo,result:{faces:[],cap:[]}};
+    if(vol>=full-1e-7){
+      const res=clipPolyhedron(normal,hi);
+      return {c:hi,result:res};
+    }
+    let result=null,mid=0;
+    for(let k=0;k<42;k++){
+      mid=(lo+hi)/2;
+      result=clipPolyhedron(normal,mid);
+      const v=polyVolume(result.faces);
+      if(v<vol) lo=mid; else hi=mid;
+    }
+    mid=(lo+hi)/2;
+    result=clipPolyhedron(normal,mid);
+    return {c:mid,result};
+  }
+
+  function geometryFromFaces(faces){
+    const positions=[];
+    for(const poly of faces){
+      if(poly.length<3) continue;
+      const a=poly[0];
+      for(let i=1;i<poly.length-1;i++){
+        const b=poly[i],c=poly[i+1];
+        positions.push(a.x,a.y,a.z,b.x,b.y,b.z,c.x,c.y,c.z);
+      }
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    g.computeVertexNormals();
+    return g;
+  }
+
+  function geometryFromPolygon(poly){
+    const positions=[];
+    if(poly.length>=3){
+      const a=poly[0];
+      for(let i=1;i<poly.length-1;i++){
+        const b=poly[i],c=poly[i+1];
+        positions.push(a.x,a.y,a.z,b.x,b.y,b.z,c.x,c.y,c.z);
+      }
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    g.computeVertexNormals();
+    return g;
+  }
+
+  function lineLoopGeometry(poly){
+    const pts=[];
+    if(poly.length){
+      for(const p of poly) pts.push(p.x,p.y,p.z);
+      pts.push(poly[0].x,poly[0].y,poly[0].z);
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+    return g;
+  }
+
+  function capShapeName(n){
+    const names={0:'无水面',3:'三角形',4:'四边形',5:'五边形',6:'六边形'};
+    if(n===4){
+      // may be rectangle/parallelogram; under horizontal plane in world, local shape can appear general
+      return '四边形';
+    }
+    return names[n]||`${n}边形`;
+  }
+
+  function updateWater(normalOverride=null){
+    if(waterMesh){
+      containerGroup.remove(waterMesh);
+      waterMesh.geometry.dispose();
+      waterMesh=null;
+    }
+    if(waterEdges){
+      containerGroup.remove(waterEdges);
+      waterEdges.geometry.dispose();
+      waterEdges.material.dispose();
+      waterEdges=null;
+    }
+    if(waterSurfaceMesh){
+      containerGroup.remove(waterSurfaceMesh);
+      waterSurfaceMesh.geometry.dispose();
+      waterSurfaceMesh=null;
+    }
+    if(waterCapLine){
+      containerGroup.remove(waterCapLine);
+      waterCapLine.geometry.dispose();
+      waterCapLine.material.dispose();
+      waterCapLine=null;
+    }
+
+    let nLocal;
+    if(normalOverride){
+      nLocal=normalOverride.clone().normalize();
+    }else{
+      const invQ=containerGroup.quaternion.clone().invert();
+      nLocal=worldUp.clone().applyQuaternion(invQ).normalize();
+      fluidNormalLocal.copy(nLocal);
+      fluidVelocity.set(0,0,0);
+    }
+
+    const {result}=cutForVolume(nLocal,targetVolume);
+
+    if(result.faces.length){
+      const geo=geometryFromFaces(result.faces);
+      waterMesh=new THREE.Mesh(geo,waterBodyMat);
+      waterMesh.renderOrder=1;
+      containerGroup.add(waterMesh);
+
+      if(result.cap.length>=3 && targetVolume>1e-6 && targetVolume<L*W*H-1e-6){
+        const sgeo=geometryFromPolygon(result.cap);
+        waterSurfaceMat.uniforms.uNormal.value.copy(nLocal);
+        waterSurfaceMesh=new THREE.Mesh(sgeo,waterSurfaceMat);
+        waterSurfaceMesh.renderOrder=2;
+        containerGroup.add(waterSurfaceMesh);
+
+        const lgeo=lineLoopGeometry(result.cap);
+        const lmat=new THREE.LineBasicMaterial({color:0x0284c7,transparent:true,opacity:.98});
+        waterCapLine=new THREE.Line(lgeo,lmat);
+        waterCapLine.renderOrder=3;
+        containerGroup.add(waterCapLine);
+      }
+
+      if(showWaterEdge){
+        const eg=new THREE.EdgesGeometry(geo,24);
+        const em=new THREE.LineBasicMaterial({color:0x0c75a5,transparent:true,opacity:.52});
+        waterEdges=new THREE.LineSegments(eg,em);
+        waterEdges.renderOrder=2;
+        containerGroup.add(waterEdges);
+      }
+    }
+
+    const sides=result.cap.length;
+    document.getElementById('capSides').textContent=sides ? `${sides} 边` : '—';
+    document.getElementById('capShape').textContent=capShapeName(sides);
+  }
+
+  function syncFluidToGravity(){
+    const invQ=containerGroup.quaternion.clone().invert();
+    fluidNormalLocal.copy(worldUp).applyQuaternion(invQ).normalize();
+    fluidVelocity.set(0,0,0);
+    lastRenderedFluidNormal.copy(fluidNormalLocal);
+    updateWater(fluidNormalLocal);
+  }
+
+
+  function disposeObject3D(obj){
+    if(!obj) return;
+    obj.traverse?.(o=>{
+      if(o.geometry) o.geometry.dispose?.();
+      if(o.material){
+        if(Array.isArray(o.material)) o.material.forEach(m=>m.dispose?.());
+        else o.material.dispose?.();
+      }
+      if(o.material?.map) o.material.map.dispose?.();
+    });
+    if(obj.parent) obj.parent.remove(obj);
+  }
+
+  function makeTextSprite(text,bg,fg){
+    const canvas=document.createElement('canvas');
+    canvas.width=256; canvas.height=128;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,256,128);
+    ctx.fillStyle=bg;
+    ctx.beginPath();
+    const x=18,y=18,w=220,h=92,r=24;
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle=fg;
+    ctx.font='700 58px system-ui, sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(text,128,66);
+    const tex=new THREE.CanvasTexture(canvas);
+    tex.minFilter=THREE.LinearFilter;
+    const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false});
+    const sprite=new THREE.Sprite(mat);
+    sprite.scale.set(1.25,.62,1);
+    sprite.renderOrder=10;
+    return sprite;
+  }
+
+  function makeFaceFrame(z,color,opacity){
+    const hx=L/2, hy=H/2;
+    const pts=[
+      new THREE.Vector3(-hx,-hy,z),new THREE.Vector3(hx,-hy,z),
+      new THREE.Vector3(hx,hy,z),new THREE.Vector3(-hx,hy,z),
+      new THREE.Vector3(-hx,-hy,z)
+    ];
+    const g=new THREE.BufferGeometry().setFromPoints(pts);
+    const m=new THREE.LineBasicMaterial({color,transparent:true,opacity,depthTest:false});
+    const line=new THREE.Line(g,m);
+    line.renderOrder=9;
+    return line;
+  }
+
+  function makeCornerMarker(x,y,z,color){
+    const s=Math.max(.12,Math.min(L,W,H)*.055);
+    const g=new THREE.SphereGeometry(s,16,10);
+    const m=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.98,depthTest:false});
+    const mesh=new THREE.Mesh(g,m);
+    mesh.position.set(x,y,z);
+    mesh.renderOrder=9;
+    return mesh;
+  }
+
+  function rebuildOrientationMarkers(){
+    disposeObject3D(frontFrame); disposeObject3D(backFrame);
+    disposeObject3D(frontLabel); disposeObject3D(backLabel);
+    frontCornerMarkers.forEach(disposeObject3D);
+    backCornerMarkers.forEach(disposeObject3D);
+    frontCornerMarkers=[]; backCornerMarkers=[];
+
+    const zFront=W/2 + .018;
+    const zBack=-W/2 - .018;
+    frontFrame=makeFaceFrame(zFront,0xbe123c,1.0);
+    backFrame=makeFaceFrame(zBack,0x2563eb,.62);
+    containerGroup.add(frontFrame,backFrame);
+
+    frontLabel=makeTextSprite('前','#fb7185','#4c0519');
+    backLabel=makeTextSprite('后','#93c5fd','#172554');
+    frontLabel.position.set(0,H/2+.42,zFront);
+    backLabel.position.set(0,H/2+.42,zBack);
+    containerGroup.add(frontLabel,backLabel);
+
+    const corners=[
+      [-L/2,-H/2],[L/2,-H/2],[-L/2,H/2],[L/2,H/2]
+    ];
+    for(const [x,y] of corners){
+      const f=makeCornerMarker(x,y,zFront,0xfb7185);
+      const b=makeCornerMarker(x,y,zBack,0x60a5fa);
+      frontCornerMarkers.push(f); backCornerMarkers.push(b);
+      containerGroup.add(f,b);
+    }
+  }
+
+  function rebuildContainer(){
+    if(containerMesh){containerGroup.remove(containerMesh);containerMesh.geometry.dispose();containerMesh.material.dispose()}
+    if(containerEdges){containerGroup.remove(containerEdges);containerEdges.geometry.dispose();containerEdges.material.dispose()}
+
+    const geo=new THREE.BoxGeometry(L,H,W);
+    const mat=new THREE.MeshPhongMaterial({
+      color:0xdbeafe,transparent:true,opacity:.10,side:THREE.DoubleSide,depthWrite:false,shininess:80
+    });
+    containerMesh=new THREE.Mesh(geo,mat);
+    containerMesh.renderOrder=3;
+    containerGroup.add(containerMesh);
+
+    const eg=new THREE.EdgesGeometry(geo);
+    const em=new THREE.LineBasicMaterial({color:0x1f2937,transparent:true,opacity:.98});
+    containerEdges=new THREE.LineSegments(eg,em);
+
+    // 前后两面使用极浅色差，既不遮挡水体，又能帮助辨别朝向
+    const faceGeo=new THREE.PlaneGeometry(L,H);
+    const frontTint=new THREE.Mesh(
+      faceGeo,
+      new THREE.MeshBasicMaterial({color:0xfda4af,transparent:true,opacity:.055,side:THREE.DoubleSide,depthWrite:false})
+    );
+    frontTint.position.z=W/2+.01;
+    frontTint.renderOrder=2.6;
+    frontTint.name='frontTint';
+
+    const backTint=new THREE.Mesh(
+      faceGeo.clone(),
+      new THREE.MeshBasicMaterial({color:0x93c5fd,transparent:true,opacity:.035,side:THREE.DoubleSide,depthWrite:false})
+    );
+    backTint.position.z=-W/2-.01;
+    backTint.renderOrder=2.5;
+    backTint.name='backTint';
+
+    const oldFront=containerGroup.getObjectByName('frontTint');
+    const oldBack=containerGroup.getObjectByName('backTint');
+    if(oldFront) disposeObject3D(oldFront);
+    if(oldBack) disposeObject3D(oldBack);
+    containerGroup.add(frontTint,backTint);
+    containerEdges.renderOrder=4;
+    containerGroup.add(containerEdges);
+
+    rebuildOrientationMarkers();
+    fitCamera();
+    syncFluidToGravity();
+  }
+
+  function updateGravityArrow(){
+    if(gravityArrow) scene.remove(gravityArrow);
+    gravityArrow=new THREE.ArrowHelper(new THREE.Vector3(0,-1,0),new THREE.Vector3(-6,5,0),4.2,0xef4444,.6,.32);
+    gravityArrow.visible=showGravity;
+    scene.add(gravityArrow);
+  }
+
+  function fitCamera(){
+    const diag=Math.sqrt(L*L+W*W+H*H);
+    cameraDistance=Math.max(9,diag*1.7);
+    updateCamera();
+  }
+
+  function updateCamera(){
+    camera.position.copy(viewDir).multiplyScalar(cameraDistance);
+    camera.lookAt(0,0,0);
+  }
+
+  function syncViewAngles(){
+    viewYaw=Math.atan2(viewDir.x,viewDir.z);
+    viewPitch=Math.asin(THREE.MathUtils.clamp(viewDir.y,-1,1));
+  }
+
+  function updateViewFromAngles(){
+    const cp=Math.cos(viewPitch);
+    viewDir.set(Math.sin(viewYaw)*cp,Math.sin(viewPitch),Math.cos(viewYaw)*cp).normalize();
+    updateCamera();
+  }
+
+  function setView(x,y,z){
+    viewDir.set(x,y,z).normalize();
+    syncViewAngles();
+    updateCamera();
+  }
+
+  function setInteractionMode(mode){
+    interactionMode=mode;
+    document.getElementById('containerMode').classList.toggle('active',mode==='container');
+    document.getElementById('viewMode').classList.toggle('active',mode==='view');
+    document.getElementById('interactionHint').textContent =
+      mode==='container'
+      ? '当前：旋转容器　·　拖动改变容器姿态　·　滚轮缩放'
+      : '当前：旋转视角　·　拖动绕容器观察　·　滚轮缩放';
+    showToast(mode==='container'?'现在拖动会旋转容器':'现在拖动会旋转观察视角');
+  }
+
+  function eulerText(){
+    const e=new THREE.Euler().setFromQuaternion(containerGroup.quaternion,'XYZ');
+    const d=r=>Math.round(THREE.MathUtils.radToDeg(r));
+    document.getElementById('angleX').textContent=d(e.x)+'°';
+    document.getElementById('angleY').textContent=d(e.y)+'°';
+    document.getElementById('angleZ').textContent=d(e.z)+'°';
+  }
+
+  function stepFluid(now){
+    let dt=Math.min(.04,Math.max(.001,(now-lastFluidTime)/1000));
+    lastFluidTime=now;
+
+    const invQ=containerGroup.quaternion.clone().invert();
+    const target=worldUp.clone().applyQuaternion(invQ).normalize();
+
+    if(!fluidDynamics || sloshStrength<=0){
+      fluidNormalLocal.lerp(target,Math.min(1,dt*15)).normalize();
+      fluidVelocity.set(0,0,0);
+    }else{
+      // 弹簧 + 阻尼：强度越大，滞后与轻微回摆越明显
+      const s=sloshStrength/100;
+      const stiffness=13 - s*5.0;
+      const damping=8.8 - s*4.0;
+      const error=target.clone().sub(fluidNormalLocal);
+
+      fluidVelocity.addScaledVector(error,stiffness*dt);
+      fluidVelocity.multiplyScalar(Math.exp(-damping*dt));
+
+      const candidate=fluidNormalLocal.clone().addScaledVector(fluidVelocity,dt);
+      if(candidate.lengthSq()<.08){
+        fluidNormalLocal.lerp(target,.15);
+      }else{
+        fluidNormalLocal.copy(candidate.normalize());
+      }
+    }
+
+    const speed=fluidVelocity.length();
+    const minDim=Math.min(L,W,H);
+    waterSurfaceMat.uniforms.uTime.value=now/1000;
+    waterSurfaceMat.uniforms.uNormal.value.copy(fluidNormalLocal);
+    waterSurfaceMat.uniforms.uWave.value=
+      fluidDynamics ? Math.min(minDim*.025, minDim*(.0025 + speed*.010*(.45+sloshStrength/100))) : 0;
+
+    const dot=THREE.MathUtils.clamp(lastRenderedFluidNormal.dot(fluidNormalLocal),-1,1);
+    const angle=Math.acos(dot);
+    const targetDot=THREE.MathUtils.clamp(fluidNormalLocal.dot(target),-1,1);
+    const unsettled=Math.acos(targetDot);
+
+    // 几何切割较重，约 30 FPS 更新即可；Shader 波纹仍每帧运动
+    if(now-lastWaterBuild>32 && (angle>.0022 || unsettled>.002 || speed>.006)){
+      updateWater(fluidNormalLocal);
+      lastRenderedFluidNormal.copy(fluidNormalLocal);
+      lastWaterBuild=now;
+    }
+  }
+
+  // 单指根据当前模式旋转“容器”或“观察视角”；双指缩放
+  const camRight=new THREE.Vector3();
+  const camUp=new THREE.Vector3();
+
+  // single pointer rotates container/view; two-finger pinch zoom
+  const pointers=new Map();
+  let lastPinch=null;
+  renderer.domElement.addEventListener('pointerdown',e=>{
+    renderer.domElement.setPointerCapture?.(e.pointerId);
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pointers.size===2){
+      const ps=[...pointers.values()];
+      lastPinch=Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y);
+    }
+  },{passive:true});
+
+  renderer.domElement.addEventListener('pointermove',e=>{
+    if(!pointers.has(e.pointerId)) return;
+    const prev=pointers.get(e.pointerId);
+    const dx=e.clientX-prev.x,dy=e.clientY-prev.y;
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+
+    if(pointers.size===1){
+      const speed=.008;
+      if(interactionMode==='container'){
+        camRight.set(1,0,0).applyQuaternion(camera.quaternion).normalize();
+        camUp.set(0,1,0).applyQuaternion(camera.quaternion).normalize();
+        const qPitch=new THREE.Quaternion().setFromAxisAngle(camRight,dy*speed);
+        const qYaw=new THREE.Quaternion().setFromAxisAngle(camUp,dx*speed);
+        containerGroup.quaternion.premultiply(qYaw).premultiply(qPitch).normalize();
+        eulerText();
+      }else{
+        viewYaw += dx*.0075;
+        viewPitch -= dy*.0075;
+        viewPitch=THREE.MathUtils.clamp(viewPitch,-1.48,1.48);
+        updateViewFromAngles();
+      }
+    }else if(pointers.size===2){
+      const ps=[...pointers.values()];
+      const dist=Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y);
+      if(lastPinch){
+        const ratio=lastPinch/dist;
+        cameraDistance=Math.min(45,Math.max(5.5,cameraDistance*ratio));
+        updateCamera();
+      }
+      lastPinch=dist;
+    }
+  },{passive:true});
+
+  function endPointer(e){
+    pointers.delete(e.pointerId);
+    if(pointers.size<2) lastPinch=null;
+  }
+  renderer.domElement.addEventListener('pointerup',endPointer,{passive:true});
+  renderer.domElement.addEventListener('pointercancel',endPointer,{passive:true});
+
+  renderer.domElement.addEventListener('wheel',e=>{
+    e.preventDefault();
+    cameraDistance*=Math.exp(e.deltaY*.0012);
+    cameraDistance=Math.min(45,Math.max(5.5,cameraDistance));
+    updateCamera();
+  },{passive:false});
+  renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
+
+  function updateUI(){
+    const cap=L*W*H;
+    targetVolume=Math.min(targetVolume,cap);
+    document.getElementById('lText').textContent=L.toFixed(1)+' cm';
+    document.getElementById('wText').textContent=W.toFixed(1)+' cm';
+    document.getElementById('hText').textContent=H.toFixed(1)+' cm';
+    document.getElementById('capacity').textContent=cap.toFixed(1);
+
+    const vSlider=document.getElementById('volume');
+    const vNum=document.getElementById('volumeNum');
+    vSlider.max=cap; vNum.max=cap;
+    vSlider.value=targetVolume; vNum.value=Number(targetVolume.toFixed(1));
+    document.getElementById('vText').textContent=targetVolume.toFixed(1)+' cm³';
+
+    const ratio=cap>0?targetVolume/cap*100:0;
+    document.getElementById('ratio').value=ratio;
+    document.getElementById('ratioText').textContent=Math.round(ratio)+'%';
+    document.getElementById('fillStat').textContent=Math.round(ratio)+'%';
+  }
+
+  function dimensionChanged(){
+    L=parseFloat(document.getElementById('length').value);
+    W=parseFloat(document.getElementById('width').value);
+    H=parseFloat(document.getElementById('height').value);
+    targetVolume=Math.min(targetVolume,L*W*H);
+    updateUI(); rebuildContainer();
+  }
+
+  function bindPair(sliderId,numId,key){
+    const s=document.getElementById(sliderId),n=document.getElementById(numId);
+    s.addEventListener('input',()=>{
+      n.value=s.value;
+      if(key==='L')L=parseFloat(s.value); if(key==='W')W=parseFloat(s.value); if(key==='H')H=parseFloat(s.value);
+      targetVolume=Math.min(targetVolume,L*W*H);
+      updateUI(); rebuildContainer();
+    });
+    n.addEventListener('change',()=>{
+      let v=parseFloat(n.value);
+      v=Math.max(parseFloat(n.min),Math.min(parseFloat(n.max),v||parseFloat(n.min)));
+      n.value=v;s.value=v;
+      if(key==='L')L=v;if(key==='W')W=v;if(key==='H')H=v;
+      targetVolume=Math.min(targetVolume,L*W*H);
+      updateUI();rebuildContainer();
+    });
+  }
+
+  bindPair('length','lengthNum','L');
+  bindPair('width','widthNum','W');
+  bindPair('height','heightNum','H');
+
+  document.getElementById('volume').addEventListener('input',e=>{
+    targetVolume=parseFloat(e.target.value); updateUI(); updateWater(fluidNormalLocal);
+  });
+  document.getElementById('volumeNum').addEventListener('change',e=>{
+    const cap=L*W*H;
+    targetVolume=Math.max(0,Math.min(cap,parseFloat(e.target.value)||0));
+    updateUI();updateWater(fluidNormalLocal);
+  });
+  document.getElementById('ratio').addEventListener('input',e=>{
+    targetVolume=L*W*H*parseFloat(e.target.value)/100;
+    updateUI();updateWater(fluidNormalLocal);
+  });
+
+  document.getElementById('showGravity').onchange=e=>{showGravity=e.target.checked;gravityArrow.visible=showGravity};
+  document.getElementById('showWaterEdge').onchange=e=>{showWaterEdge=e.target.checked;updateWater(fluidNormalLocal)};
+  document.getElementById('fluidDynamics').onchange=e=>{
+    fluidDynamics=e.target.checked;
+    if(!fluidDynamics) syncFluidToGravity();
+  };
+  document.getElementById('sloshStrength').oninput=e=>{
+    sloshStrength=parseInt(e.target.value,10);
+    document.getElementById('sloshText').textContent=sloshStrength+'%';
+  };
+  document.getElementById('containerMode').onclick=()=>setInteractionMode('container');
+  document.getElementById('viewMode').onclick=()=>setInteractionMode('view');
+
+  document.getElementById('resetRot').onclick=()=>{
+    containerGroup.quaternion.identity(); syncFluidToGravity();eulerText();showToast('容器已恢复水平');
+  };
+  document.getElementById('randomRot').onclick=()=>{
+    const e=new THREE.Euler(
+      THREE.MathUtils.degToRad((Math.random()*110)-55),
+      THREE.MathUtils.degToRad((Math.random()*140)-70),
+      THREE.MathUtils.degToRad((Math.random()*110)-55)
+    );
+    containerGroup.quaternion.setFromEuler(e);eulerText();
+  };
+  document.getElementById('fitBtn').onclick=fitCamera;
+
+  document.getElementById('fullBtn').onclick=()=>{
+    if(document.fullscreenElement){document.exitFullscreen().catch(()=>{})}
+    else if(stage.requestFullscreen){stage.requestFullscreen().catch(()=>{stage.classList.toggle('full');setTimeout(resize,50)})}
+    else{stage.classList.toggle('full');setTimeout(resize,50)}
+  };
+  document.addEventListener('fullscreenchange',()=>setTimeout(resize,50));
+
+  document.getElementById('frontBtn').onclick=()=>setView(0,.05,1);
+  document.getElementById('sideBtn').onclick=()=>setView(1,.05,0);
+  document.getElementById('topBtn').onclick=()=>setView(0,1,.001);
+  document.getElementById('isoBtn').onclick=()=>setView(9,7,11);
+
+  function resize(){
+    const r=mount.getBoundingClientRect();
+    if(r.width<2||r.height<2)return;
+    renderer.setSize(r.width,r.height,false);
+    camera.aspect=r.width/r.height;camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize',()=>requestAnimationFrame(resize));
+  window.addEventListener('orientationchange',()=>setTimeout(resize,180));
+  if('ResizeObserver'in window)new ResizeObserver(()=>requestAnimationFrame(resize)).observe(stage);
+
+  function loop(now){
+    stepFluid(now);
+    renderer.render(scene,camera);
+    requestAnimationFrame(loop);
+  }
+
+  updateGravityArrow();
+  updateUI();
+  rebuildContainer();
+  eulerText();
+  syncViewAngles();
+  setInteractionMode('container');
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

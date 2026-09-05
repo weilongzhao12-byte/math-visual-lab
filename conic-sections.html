@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>圆锥曲线探索器 · 稳定布局版</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#d8e1eb;--accent:#2563eb;--shadow:0 8px 26px rgba(18,38,65,.07)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text)}
+body{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,input,select{font:inherit}button{min-height:42px;border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 10px;font-weight:650;color:var(--text);cursor:pointer}
+button.active,button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=number],select{width:100%;min-height:38px;border:1px solid var(--line);border-radius:9px;padding:6px 8px;background:#fff}
+.page{min-height:100vh;padding:10px;display:grid;grid-template-columns:320px minmax(0,1fr);gap:10px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}.side{padding:16px;overflow:auto;max-height:calc(100vh - 20px)}.stage{padding:12px;min-height:690px}
+.back{display:inline-block;text-decoration:none;color:var(--accent);font-size:12px;font-weight:700;margin-bottom:10px}.title{font-size:20px;margin:0 0 5px}.sub,.note{font-size:11px;line-height:1.65;color:var(--muted)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:13px 0}
+.tabs button{min-height:40px;font-size:12px}
+.section{margin-top:14px}.section h2{font-size:13px;margin:0 0 8px}
+.field{margin:9px 0}.fh{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;margin-bottom:5px}.dual{display:grid;grid-template-columns:1fr 76px;gap:7px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.stat{border:1px solid var(--line);border-radius:10px;padding:9px;background:#f9fbfd}.stat b{display:block;font-size:15px}.stat span{font-size:10px;color:var(--muted)}
+.eq{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:11px;background:#f8fafc;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.7;word-break:break-word}
+.note{border:1px solid #edf1f5;background:#f8fafc;border-radius:10px;padding:8px;margin-top:10px}
+.work{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:10px;align-items:start}.plotWrap{position:relative;border:1px solid var(--line);border-radius:12px;background:#fbfdff;height:650px;min-width:0;overflow:hidden;contain:layout paint}
+#plot{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}.legend{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;align-self:stretch}
+.legend h3{font-size:13px;margin:0 0 8px}.legend p{font-size:11px;line-height:1.7;color:var(--muted);margin:5px 0}.rowkey{display:flex;align-items:center;gap:7px;font-size:11px;margin:7px 0}.dot{width:11px;height:11px;border-radius:50%}.line{width:24px;height:3px;border-radius:99px}
+.dragHint{position:absolute;left:10px;top:10px;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.92);font-size:10px;color:var(--muted);pointer-events:none}
+@media(max-width:980px){.page{grid-template-columns:285px 1fr}.work{grid-template-columns:1fr}.legend{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.plotWrap{height:520px}}
+@media(max-width:720px){.page{display:flex;flex-direction:column;padding:8px}.stage{order:1;min-height:0}.side{order:2;max-height:none}.plotWrap{height:460px}.legend{grid-template-columns:1fr 1fr}.tabs button{font-size:11px}}
+</style>
+</head>
+<body>
+<div class="page">
+<aside class="panel side">
+<a class="back" href="./index.html">← 返回实验室</a>
+<h1 class="title">圆锥曲线探索器</h1>
+<div class="sub">把标准方程、焦点、准线、离心率和“距离定义”放在同一张动态坐标图里。拖动曲线上的红点，可实时验证定义。</div>
+
+<div class="tabs">
+<button class="tab active" data-type="ellipse">椭圆</button>
+<button class="tab" data-type="hyperbola">双曲线</button>
+<button class="tab" data-type="parabola">抛物线</button>
+</div>
+
+<div id="ellipseControls">
+<div class="section"><h2>参数</h2>
+<div class="field"><div class="fh"><b>长半轴 a</b><span id="eaText">5.0</span></div><div class="dual"><input id="ea" type="range" min="2" max="8" step="0.1" value="5"><input id="eaNum" type="number" min="2" max="8" step="0.1" value="5"></div></div>
+<div class="field"><div class="fh"><b>短半轴 b</b><span id="ebText">3.0</span></div><div class="dual"><input id="eb" type="range" min="0.8" max="4.9" step="0.1" value="3"><input id="ebNum" type="number" min="0.8" max="4.9" step="0.1" value="3"></div></div>
+<div class="field"><div class="fh"><b>轨迹点角度 θ</b><span id="etText">40°</span></div><input id="et" type="range" min="0" max="360" step="1" value="40"></div>
+</div></div>
+
+<div id="hyperbolaControls" hidden>
+<div class="section"><h2>参数</h2>
+<div class="field"><div class="fh"><b>实半轴 a</b><span id="haText">3.0</span></div><div class="dual"><input id="ha" type="range" min="1" max="6" step="0.1" value="3"><input id="haNum" type="number" min="1" max="6" step="0.1" value="3"></div></div>
+<div class="field"><div class="fh"><b>虚半轴 b</b><span id="hbText">2.0</span></div><div class="dual"><input id="hb" type="range" min="0.8" max="5" step="0.1" value="2"><input id="hbNum" type="number" min="0.8" max="5" step="0.1" value="2"></div></div>
+<div class="field"><div class="fh"><b>分支</b></div><select id="branch"><option value="1">右支</option><option value="-1">左支</option></select></div>
+<div class="field"><div class="fh"><b>轨迹参数 t</b><span id="htText">0.80</span></div><input id="ht" type="range" min="-1.6" max="1.6" step="0.01" value="0.8"></div>
+</div></div>
+
+<div id="parabolaControls" hidden>
+<div class="section"><h2>参数</h2>
+<div class="field"><div class="fh"><b>焦参数 p</b><span id="ppText">2.0</span></div><div class="dual"><input id="pp" type="range" min="0.5" max="4" step="0.1" value="2"><input id="ppNum" type="number" min="0.5" max="4" step="0.1" value="2"></div></div>
+<div class="field"><div class="fh"><b>轨迹参数 t</b><span id="ptText">0.80</span></div><input id="pt" type="range" min="-2.5" max="2.5" step="0.01" value="0.8"></div>
+</div></div>
+
+<div class="eq" id="equation"></div>
+<div class="stats">
+<div class="stat"><b id="ecc">—</b><span>离心率 e</span></div>
+<div class="stat"><b id="point">—</b><span>当前点 P</span></div>
+<div class="stat"><b id="d1">—</b><span id="d1Label">PF₁</span></div>
+<div class="stat"><b id="d2">—</b><span id="d2Label">PF₂</span></div>
+</div>
+<div class="note" id="definition"></div>
+</aside>
+
+<section class="panel stage">
+<div class="work">
+<div class="plotWrap"><canvas id="plot"></canvas><div class="dragHint">拖动红色点 P，沿曲线改变位置</div></div>
+<div class="legend">
+<h3>图中元素</h3>
+<div class="rowkey"><i class="line" style="background:#2563eb"></i>圆锥曲线</div>
+<div class="rowkey"><i class="dot" style="background:#ef4444"></i>轨迹点 P</div>
+<div class="rowkey"><i class="dot" style="background:#f59e0b"></i>焦点</div>
+<div class="rowkey"><i class="line" style="background:#94a3b8"></i>准线 / 渐近线</div>
+<div class="rowkey"><i class="line" style="background:#16a34a"></i>距离关系辅助线</div>
+<p id="explain"></p>
+</div>
+</div>
+</section>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+let type='ellipse',dragging=false;
+const canvas=$('plot'),ctx=canvas.getContext('2d');
+let W=900,H=650,scale=50,cx=450,cy=325,worldX=9,worldY=6.5;
+const state={ellipse:{a:5,b:3,theta:40*Math.PI/180},hyperbola:{a:3,b:2,t:.8,branch:1},parabola:{p:2,t:.8}};
+
+function fmt(x,n=2){return Number.isFinite(x)?x.toFixed(n):'—'}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function syncPair(slider,num,key,obj,min,max,onchange){
+  const s=$(slider),n=$(num);
+  const set=v=>{v=clamp(+v,min,max);obj[key]=v;s.value=v;n.value=v;onchange?.();draw()};
+  s.addEventListener('input',()=>set(s.value));n.addEventListener('change',()=>set(n.value));
+}
+syncPair('ea','eaNum','a',state.ellipse,2,8,()=>{state.ellipse.b=Math.min(state.ellipse.b,state.ellipse.a-.1);$('eb').max=(state.ellipse.a-.1).toFixed(1);$('ebNum').max=$('eb').max;$('eb').value=state.ellipse.b;$('ebNum').value=state.ellipse.b});
+syncPair('eb','ebNum','b',state.ellipse,.8,4.9,()=>{if(state.ellipse.b>=state.ellipse.a){state.ellipse.b=state.ellipse.a-.1;$('eb').value=state.ellipse.b;$('ebNum').value=state.ellipse.b}});
+syncPair('ha','haNum','a',state.hyperbola,1,6);
+syncPair('hb','hbNum','b',state.hyperbola,.8,5);
+syncPair('pp','ppNum','p',state.parabola,.5,4);
+
+$('et').addEventListener('input',()=>{state.ellipse.theta=+$('et').value*Math.PI/180;draw()});
+$('ht').addEventListener('input',()=>{state.hyperbola.t=+$('ht').value;draw()});
+$('pt').addEventListener('input',()=>{state.parabola.t=+$('pt').value;draw()});
+$('branch').addEventListener('change',()=>{state.hyperbola.branch=+$('branch').value;draw()});
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  type=b.dataset.type;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
+  $('ellipseControls').hidden=type!=='ellipse';$('hyperbolaControls').hidden=type!=='hyperbola';$('parabolaControls').hidden=type!=='parabola';draw();
+}));
+
+let resizeQueued=false;
+function resize(){
+  const host=canvas.parentElement;
+  const r=host.getBoundingClientRect();
+  const d=Math.min(devicePixelRatio||1,2);
+  const nextW=Math.max(400,Math.floor(host.clientWidth*d));
+  const nextH=Math.max(420,Math.floor(host.clientHeight*d));
+
+  // 只修改 Canvas 的内部像素缓冲区，不再修改 CSS 尺寸。
+  // 这样 ResizeObserver 不会因自身回调再次改变布局而产生循环下移。
+  if(canvas.width!==nextW)canvas.width=nextW;
+  if(canvas.height!==nextH)canvas.height=nextH;
+  W=canvas.width;H=canvas.height;
+  draw();
+}
+const plotObserver=new ResizeObserver(()=>{
+  if(resizeQueued)return;
+  resizeQueued=true;
+  requestAnimationFrame(()=>{resizeQueued=false;resize();});
+});
+plotObserver.observe(canvas.parentElement);
+window.addEventListener('resize',()=>requestAnimationFrame(resize));
+
+function setupView(){
+  if(type==='ellipse'){const s=state.ellipse;worldX=Math.max(7,s.a*1.55);worldY=Math.max(5,s.b*1.8)}
+  else if(type==='hyperbola'){const s=state.hyperbola;worldX=Math.max(8,s.a*3.0);worldY=Math.max(6,s.b*3.0)}
+  else{const s=state.parabola;worldX=Math.max(9,s.p*7);worldY=Math.max(6,s.p*4.5)}
+  const pad=55*Math.min(devicePixelRatio||1,2);
+  scale=Math.min((W-2*pad)/(2*worldX),(H-2*pad)/(2*worldY));cx=W/2;cy=H/2;
+}
+function sx(x){return cx+x*scale}function sy(y){return cy-y*scale}function wx(X){return(X-cx)/scale}function wy(Y){return(cy-Y)/scale}
+function line(x1,y1,x2,y2,color='#94a3b8',width=2,dash=[]){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width*(devicePixelRatio||1);ctx.setLineDash(dash.map(v=>v*(devicePixelRatio||1)));ctx.beginPath();ctx.moveTo(sx(x1),sy(y1));ctx.lineTo(sx(x2),sy(y2));ctx.stroke();ctx.restore()}
+function point(x,y,color,label,r=6){const d=devicePixelRatio||1;ctx.save();ctx.fillStyle=color;ctx.beginPath();ctx.arc(sx(x),sy(y),r*d,0,Math.PI*2);ctx.fill();ctx.fillStyle='#172033';ctx.font=`${12*d}px system-ui`;ctx.fillText(label,sx(x)+9*d,sy(y)-8*d);ctx.restore()}
+function axes(){
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#fbfdff';ctx.fillRect(0,0,W,H);
+  ctx.save();ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1;
+  const gx=Math.ceil(worldX),gy=Math.ceil(worldY);
+  for(let x=-gx;x<=gx;x++){ctx.beginPath();ctx.moveTo(sx(x),0);ctx.lineTo(sx(x),H);ctx.stroke()}
+  for(let y=-gy;y<=gy;y++){ctx.beginPath();ctx.moveTo(0,sy(y));ctx.lineTo(W,sy(y));ctx.stroke()}
+  ctx.restore();line(-worldX,0,worldX,0,'#475569',1.6);line(0,-worldY,0,worldY,'#475569',1.6);
+}
+function curve(points,color='#2563eb',width=3){
+  if(!points.length)return;const d=devicePixelRatio||1;ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width*d;ctx.beginPath();
+  points.forEach((p,i)=>{if(!p||!Number.isFinite(p[0])||!Number.isFinite(p[1]))return;i?ctx.lineTo(sx(p[0]),sy(p[1])):ctx.moveTo(sx(p[0]),sy(p[1]))});ctx.stroke();ctx.restore();
+}
+function draw(){
+  setupView();axes();const d=devicePixelRatio||1;
+  let P=[0,0],F1=null,F2=null,def='',eq='',ecc='—',d1='—',d2='—',explain='';
+  if(type==='ellipse'){
+    const s=state.ellipse;a=s.a;b=s.b;const c=Math.sqrt(Math.max(0,a*a-b*b)),e=c/a;
+    const pts=[];for(let i=0;i<=500;i++){const t=i/500*Math.PI*2;pts.push([a*Math.cos(t),b*Math.sin(t)])}curve(pts);
+    P=[a*Math.cos(s.theta),b*Math.sin(s.theta)];F1=[-c,0];F2=[c,0];
+    const A=Math.hypot(P[0]+c,P[1]),B=Math.hypot(P[0]-c,P[1]);d1=fmt(A);d2=fmt(B);ecc=fmt(e,3);
+    if(e>.001){line(-a/e,-worldY,-a/e,worldY,'#94a3b8',1.4,[6,5]);line(a/e,-worldY,a/e,worldY,'#94a3b8',1.4,[6,5])}
+    line(P[0],P[1],F1[0],F1[1],'#16a34a',1.5);line(P[0],P[1],F2[0],F2[1],'#16a34a',1.5);
+    eq=`x²/${fmt(a*a,2)} + y²/${fmt(b*b,2)} = 1`;def=`椭圆定义：PF₁ + PF₂ = 2a = ${fmt(2*a)}。当前 ${fmt(A)} + ${fmt(B)} = ${fmt(A+B)}。`;explain='移动 P 点时，到两个焦点的距离之和保持不变。离心率 e=c/a，0<e<1。';
+    $('etText').textContent=Math.round(s.theta*180/Math.PI)+'°';$('eaText').textContent=a.toFixed(1);$('ebText').textContent=b.toFixed(1);
+    $('d1Label').textContent='PF₁';$('d2Label').textContent='PF₂';
+  }else if(type==='hyperbola'){
+    const s=state.hyperbola,a=s.a,b=s.b,c=Math.sqrt(a*a+b*b),e=c/a,br=s.branch,t=s.t;
+    const right=[],left=[];for(let i=0;i<=420;i++){const u=-1.75+i/420*3.5;right.push([a*Math.cosh(u),b*Math.sinh(u)]);left.push([-a*Math.cosh(u),b*Math.sinh(u)])}curve(right);curve(left);
+    line(-worldX,-b/a*worldX,worldX,b/a*worldX,'#94a3b8',1.5,[7,5]);line(-worldX,b/a*worldX,worldX,-b/a*worldX,'#94a3b8',1.5,[7,5]);
+    P=[br*a*Math.cosh(t),b*Math.sinh(t)];F1=[-c,0];F2=[c,0];
+    const A=Math.hypot(P[0]+c,P[1]),B=Math.hypot(P[0]-c,P[1]);d1=fmt(A);d2=fmt(B);ecc=fmt(e,3);
+    line(-a/e,-worldY,-a/e,worldY,'#94a3b8',1.2,[5,5]);line(a/e,-worldY,a/e,worldY,'#94a3b8',1.2,[5,5]);
+    line(P[0],P[1],F1[0],F1[1],'#16a34a',1.5);line(P[0],P[1],F2[0],F2[1],'#16a34a',1.5);
+    eq=`x²/${fmt(a*a,2)} - y²/${fmt(b*b,2)} = 1`;def=`双曲线定义：|PF₁ - PF₂| = 2a = ${fmt(2*a)}。当前 |${fmt(A)} - ${fmt(B)}| = ${fmt(Math.abs(A-B))}。`;explain='两支曲线都满足到两个焦点距离之差的绝对值为常数。虚线为渐近线和准线。离心率 e>1。';
+    $('haText').textContent=a.toFixed(1);$('hbText').textContent=b.toFixed(1);$('htText').textContent=t.toFixed(2);$('d1Label').textContent='PF₁';$('d2Label').textContent='PF₂';
+  }else{
+    const s=state.parabola,p=s.p,t=s.t;const pts=[];for(let u=-2.7;u<=2.7;u+=.018)pts.push([p*u*u,2*p*u]);curve(pts);
+    P=[p*t*t,2*p*t];F1=[p,0];const directX=-p;const A=Math.hypot(P[0]-p,P[1]);const B=Math.abs(P[0]-directX);
+    d1=fmt(A);d2=fmt(B);ecc='1.000';line(directX,-worldY,directX,worldY,'#94a3b8',1.5,[7,5]);
+    line(P[0],P[1],F1[0],F1[1],'#16a34a',1.5);line(P[0],P[1],directX,P[1],'#16a34a',1.5);
+    eq=`y² = ${fmt(4*p,2)}x`;def=`抛物线定义：PF = P到准线的距离。当前 PF=${fmt(A)}，到准线距离=${fmt(B)}。`;explain='抛物线上的点到焦点和准线的距离始终相等，因此离心率 e=1。';
+    $('ppText').textContent=p.toFixed(1);$('ptText').textContent=t.toFixed(2);$('d1Label').textContent='PF';$('d2Label').textContent='P到准线';
+  }
+  if(F1)point(F1[0],F1[1],'#f59e0b',type==='parabola'?'F':'F₁',5);if(F2)point(F2[0],F2[1],'#f59e0b','F₂',5);point(P[0],P[1],'#ef4444','P',7);
+  $('equation').textContent='标准方程：'+eq;$('definition').textContent=def;$('ecc').textContent=ecc;$('point').textContent=`(${fmt(P[0],1)}, ${fmt(P[1],1)})`;$('d1').textContent=d1;$('d2').textContent=d2;$('explain').textContent=explain;
+}
+function canvasPoint(e){const r=canvas.getBoundingClientRect(),d=canvas.width/r.width;return[(e.clientX-r.left)*d,(e.clientY-r.top)*d]}
+function updateFromPointer(e){
+  const [X,Y]=canvasPoint(e),x=wx(X),y=wy(Y);
+  if(type==='ellipse'){const s=state.ellipse;s.theta=Math.atan2(y/s.b,x/s.a);if(s.theta<0)s.theta+=Math.PI*2;$('et').value=s.theta*180/Math.PI}
+  else if(type==='hyperbola'){const s=state.hyperbola;s.branch=x>=0?1:-1;$('branch').value=s.branch;s.t=clamp(Math.asinh(y/s.b),-1.6,1.6);$('ht').value=s.t}
+  else{const s=state.parabola;s.t=clamp(y/(2*s.p),-2.5,2.5);$('pt').value=s.t}
+  draw();
+}
+canvas.addEventListener('pointerdown',e=>{dragging=true;canvas.setPointerCapture?.(e.pointerId);updateFromPointer(e)});
+canvas.addEventListener('pointermove',e=>{if(dragging)updateFromPointer(e)});
+canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);
+resize();draw();
+})();
+</script>
+</body>
+</html>

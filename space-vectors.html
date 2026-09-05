@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>空间向量实验室 · 字体兼容修正版</title>
+<style>
+:root{
+  --bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#d8e1eb;
+  --accent:#2563eb;--a:#e11d48;--b:#0891b2;--proj:#16a34a;--cross:#9333ea;
+  --shadow:0 8px 26px rgba(18,38,65,.07)
+}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text)}
+body{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,input{font:inherit}
+button{min-height:42px;border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 10px;font-weight:650;color:var(--text);cursor:pointer;touch-action:manipulation}
+button.active,button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+input[type=number]{width:100%;height:38px;border:1px solid var(--line);border-radius:9px;padding:5px 7px;background:#fff;font-size:14px}
+.page{min-height:100vh;padding:10px;display:grid;grid-template-columns:350px minmax(0,1fr);gap:10px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.side{padding:16px;overflow:auto;max-height:calc(100vh - 20px)}
+.stage{position:relative;height:calc(100vh - 20px);min-height:650px;background:#f8fbff}
+.back{display:inline-block;text-decoration:none;color:var(--accent);font-size:12px;font-weight:700;margin-bottom:10px}
+.title{font-size:20px;margin:0 0 5px}.sub,.note{font-size:11px;line-height:1.65;color:var(--muted)}
+.section{margin-top:14px}.section h2{font-size:13px;margin:0 0 8px}
+
+.vectorCard{border:1px solid var(--line);border-radius:12px;padding:10px;margin:8px 0;background:#fbfcfe}
+.vectorCard.a{border-left:4px solid var(--a)}.vectorCard.b{border-left:4px solid var(--b)}
+.vectorHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.vectorHead b{font-size:14px}.vectorHead span{font-size:10px;color:var(--muted)}
+.vecGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.comp label{display:block;font-size:10px;color:var(--muted);margin:0 0 4px;text-align:center}
+.mode{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.mode button{font-size:11px;padding:6px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+.stat{padding:9px;border:1px solid var(--line);border-radius:10px;background:#f9fbfd;min-width:0}
+.stat b{display:block;font-size:14px;word-break:break-word;line-height:1.35}.stat span{font-size:10px;color:var(--muted)}
+.eq{padding:10px;border:1px solid var(--line);border-radius:10px;background:#f8fafc;font:11.5px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;margin-top:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.note{border:1px solid #edf1f5;background:#f8fafc;border-radius:10px;padding:8px;margin-top:10px}
+
+#three{position:absolute;inset:0}.stage canvas{width:100%!important;height:100%!important;display:block;touch-action:none}
+.tip{position:absolute;left:12px;top:12px;z-index:5;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:10.5px;color:var(--muted);pointer-events:none}
+.viewQuick{position:absolute;right:12px;top:12px;z-index:8;display:grid;grid-template-columns:repeat(2,44px);gap:6px}
+.viewQuick button{width:44px;height:44px;min-height:44px;padding:0;font-size:10px;background:rgba(255,255,255,.94);box-shadow:0 3px 12px rgba(20,35,60,.06)}
+.legend{position:absolute;right:12px;bottom:12px;z-index:5;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:11px;padding:8px 10px;font-size:10.5px;line-height:1.85;color:var(--muted)}
+.legendRow{display:flex;align-items:center;gap:5px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.status{position:absolute;left:12px;bottom:12px;z-index:5;max-width:320px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:10.5px;color:#475569;pointer-events:none}
+@media(max-width:980px){.page{grid-template-columns:310px 1fr}.stage{height:680px;min-height:580px}}
+@media(max-width:720px){
+  .page{display:flex;flex-direction:column;padding:8px}.stage{order:1;height:58vh;min-height:470px}.side{order:2;max-height:none}
+  .page{grid-template-columns:1fr}.viewQuick{right:9px;top:9px;grid-template-columns:repeat(4,40px)}.viewQuick button{width:40px;height:40px;min-height:40px}
+  .tip{left:9px;top:9px;max-width:160px}.legend{right:9px;bottom:9px}.status{left:9px;bottom:9px;max-width:210px}
+  button{min-height:44px}
+}
+@media(max-width:420px){.stats{grid-template-columns:1fr 1fr}.legend{display:none}.status{font-size:9.5px}}
+</style>
+</head>
+<body>
+<div class="page">
+<aside class="panel side">
+<a class="back" href="./index.html">← 返回实验室</a>
+<h1 class="title">空间向量实验室</h1>
+<div class="sub">在三维坐标系中观察两个空间向量，并实时计算长度、夹角、点积、叉积和正交投影。3D 标签采用跨平台兼容字符，并与箭头尖端错开，避免 Windows Canvas 字体出现方框乱码。</div>
+
+<div class="section"><h2>向量分量</h2>
+<div class="vectorCard a">
+  <div class="vectorHead"><b style="color:var(--a)">向量 a</b><span>第一个向量</span></div>
+  <div class="vecGrid">
+    <div class="comp"><label>x 分量</label><input id="ax" type="number" min="-6" max="6" step=".1" value="4"></div>
+    <div class="comp"><label>y 分量</label><input id="ay" type="number" min="-6" max="6" step=".1" value="2"></div>
+    <div class="comp"><label>z 分量</label><input id="az" type="number" min="-6" max="6" step=".1" value="1"></div>
+  </div>
+</div>
+<div class="vectorCard b">
+  <div class="vectorHead"><b style="color:var(--b)">向量 b</b><span>第二个向量</span></div>
+  <div class="vecGrid">
+    <div class="comp"><label>x 分量</label><input id="bx" type="number" min="-6" max="6" step=".1" value="1"></div>
+    <div class="comp"><label>y 分量</label><input id="by" type="number" min="-6" max="6" step=".1" value="4"></div>
+    <div class="comp"><label>z 分量</label><input id="bz" type="number" min="-6" max="6" step=".1" value="2"></div>
+  </div>
+</div>
+</div>
+
+<div class="section"><h2>观察内容</h2>
+<div class="mode">
+<button class="modeBtn active" data-mode="basic">夹角</button>
+<button class="modeBtn" data-mode="projection">正交投影</button>
+<button class="modeBtn" data-mode="cross">叉积 / 法向</button>
+</div>
+</div>
+
+<div class="stats">
+<div class="stat"><b id="alen">—</b><span>向量 a 的长度 |a|</span></div>
+<div class="stat"><b id="blen">—</b><span>向量 b 的长度 |b|</span></div>
+<div class="stat"><b id="angle">—</b><span>夹角 θ</span></div>
+<div class="stat"><b id="dot">—</b><span>点积 a · b</span></div>
+<div class="stat"><b id="cross">—</b><span>叉积 a × b</span></div>
+<div class="stat"><b id="proj">—</b><span>proj_b(a)</span></div>
+</div>
+
+<div class="eq" id="formula"></div>
+<div class="note" id="modeNote"></div>
+</aside>
+
+<section class="panel stage">
+<div class="tip">拖动旋转视角 · 滚轮 / 双指缩放 · 右键拖动平移</div>
+<div class="viewQuick">
+<button id="isoView">立体</button><button id="frontView">正视</button>
+<button id="sideView">侧视</button><button id="topView">俯视</button>
+</div>
+<div id="three"></div>
+<div class="status" id="status">红色“a”和青色“b”从原点出发；3D标签使用兼容字符并避开箭头尖端。</div>
+<div class="legend">
+<div class="legendRow"><i class="dot" style="background:var(--a)"></i>向量 a</div>
+<div class="legendRow"><i class="dot" style="background:var(--b)"></i>向量 b</div>
+<div class="legendRow"><i class="dot" style="background:var(--proj)"></i>投影</div>
+<div class="legendRow"><i class="dot" style="background:var(--cross)"></i>叉积 a × b</div>
+</div>
+</section>
+</div>
+
+<script src="./vendor/three.min.js"></script>
+<script src="./vendor/OrbitControls.js"></script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+let mode='basic';
+const COLORS={a:0xe11d48,b:0x0891b2,proj:0x16a34a,cross:0x9333ea};
+
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xf8fbff);
+const camera=new THREE.PerspectiveCamera(40,1,.1,100);camera.position.set(9,7,10);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));$('three').appendChild(renderer.domElement);
+
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.minDistance=4;controls.maxDistance=30;controls.screenSpacePanning=true;controls.target.set(0,1,0);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0xb7c2d2,1.05));
+const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(8,12,9);scene.add(dl);
+
+const grid=new THREE.GridHelper(14,14,0x94a3b8,0xd9e0e8);
+grid.material.transparent=true;grid.material.opacity=.48;scene.add(grid);
+const axes=new THREE.AxesHelper(7);
+axes.material.transparent=true;axes.material.opacity=.55;scene.add(axes);
+
+const group=new THREE.Group();scene.add(group);
+
+function clamp(v){return Math.max(-6,Math.min(6,Number.isFinite(v)?v:0))}
+function read(id){const e=$(id);let v=clamp(parseFloat(e.value));e.value=v;return v}
+function vec(prefix){return new THREE.Vector3(read(prefix+'x'),read(prefix+'y'),read(prefix+'z'))}
+function fmt(v,n=2){return Number.isFinite(v)?v.toFixed(n):'—'}
+function fmtV(v){return `(${fmt(v.x,2)}, ${fmt(v.y,2)}, ${fmt(v.z,2)})`}
+function cssColor(hex){return '#'+hex.toString(16).padStart(6,'0')}
+
+function clear(){
+  while(group.children.length){
+    const o=group.children.pop();
+    o.traverse?.(x=>{
+      x.geometry?.dispose?.();
+      if(x.material){
+        if(Array.isArray(x.material))x.material.forEach(m=>{m.map?.dispose?.();m.dispose?.()});
+        else{x.material.map?.dispose?.();x.material.dispose?.()}
+      }
+    });
+  }
+}
+
+function labelPosition(tip,sideSign=1){
+  const dir=tip.clone();
+  if(dir.length()<1e-6)return tip.clone();
+  dir.normalize();
+
+  let ref=Math.abs(dir.y)<.86?new THREE.Vector3(0,1,0):new THREE.Vector3(1,0,0);
+  const side=new THREE.Vector3().crossVectors(dir,ref).normalize();
+  const up=new THREE.Vector3().crossVectors(side,dir).normalize();
+
+  const offset=Math.max(.42,Math.min(.68,tip.length()*.12));
+  return tip.clone()
+    .addScaledVector(side,offset*sideSign)
+    .addScaledVector(up,.22);
+}
+
+function labelSprite(text,tip,color,sideSign=1){
+  const c=document.createElement('canvas');c.width=260;c.height=112;const ctx=c.getContext('2d');
+  const stroke=cssColor(color);
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.fillStyle='rgba(255,255,255,.96)';
+  ctx.beginPath();ctx.roundRect?.(8,8,244,96,22);
+  if(ctx.roundRect)ctx.fill();else ctx.fillRect(8,8,244,96);
+  ctx.strokeStyle=stroke;ctx.lineWidth=7;ctx.strokeRect(8,8,244,96);
+  ctx.fillStyle=stroke;ctx.font='800 48px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,130,58);
+
+  const tex=new THREE.CanvasTexture(c);tex.minFilter=THREE.LinearFilter;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+  s.position.copy(labelPosition(tip,sideSign));
+  s.scale.set(1.05,.46,1);s.renderOrder=20;group.add(s);
+
+  // 细连接线帮助识别标签属于哪一个箭头。
+  const g=new THREE.BufferGeometry().setFromPoints([tip,s.position]);
+  const l=new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity:.38,depthTest:false}));
+  l.renderOrder=19;group.add(l);
+}
+
+function arrow(v,color,label,sideSign=1){
+  const len=v.length();if(len<1e-6)return;
+  const dir=v.clone().normalize();
+  const headLen=Math.min(.42,Math.max(.24,len*.16));
+  const headWidth=Math.min(.25,Math.max(.13,len*.085));
+  const a=new THREE.ArrowHelper(dir,new THREE.Vector3(0,0,0),len,color,headLen,headWidth);
+  group.add(a);labelSprite(label,v,color,sideSign);
+}
+
+function lineBetween(a,b,color=COLORS.proj,dashed=false){
+  const g=new THREE.BufferGeometry().setFromPoints([a,b]);
+  const m=dashed
+    ?new THREE.LineDashedMaterial({color,dashSize:.18,gapSize:.12,transparent:true,opacity:.85})
+    :new THREE.LineBasicMaterial({color,transparent:true,opacity:.88});
+  const l=new THREE.Line(g,m);if(dashed)l.computeLineDistances();group.add(l);return l;
+}
+
+function planeFromVectors(a,b){
+  const n=new THREE.Vector3().crossVectors(a,b);if(n.length()<1e-6)return;
+  const s=.55,pts=[
+    new THREE.Vector3(),a.clone().multiplyScalar(s),
+    a.clone().multiplyScalar(s).add(b.clone().multiplyScalar(s)),
+    b.clone().multiplyScalar(s)
+  ];
+  const pos=[];[[0,1,2],[0,2,3]].forEach(t=>t.forEach(i=>pos.push(pts[i].x,pts[i].y,pts[i].z)));
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();
+  const mesh=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xc4b5fd,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false}));
+  mesh.renderOrder=0;group.add(mesh);
+  lineBetween(a.clone().multiplyScalar(s),pts[2],COLORS.cross,true);
+  lineBetween(b.clone().multiplyScalar(s),pts[2],COLORS.cross,true);
+}
+
+function angleArc(a,b){
+  if(a.length()<1e-6||b.length()<1e-6)return;
+  const ua=a.clone().normalize(),ub=b.clone().normalize(),theta=ua.angleTo(ub);if(theta<.03)return;
+  const normal=new THREE.Vector3().crossVectors(ua,ub);if(normal.length()<1e-6)return;normal.normalize();
+  const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),normal);
+  const localA=ua.clone().applyQuaternion(q.clone().invert());let start=Math.atan2(localA.y,localA.x);
+  const r=1.0,pts=[];
+  for(let i=0;i<=40;i++){const t=start+theta*i/40;pts.push(new THREE.Vector3(Math.cos(t)*r,Math.sin(t)*r,0).applyQuaternion(q))}
+  const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0xf59e0b}));
+  group.add(l);
+}
+
+function update(){
+  clear();
+  const a=vec('a'),b=vec('b'),al=a.length(),bl=b.length(),dot=a.dot(b);
+  const cross=new THREE.Vector3().crossVectors(a,b);
+  const angle=al>1e-9&&bl>1e-9?THREE.MathUtils.radToDeg(a.angleTo(b)):NaN;
+  const proj=bl>1e-9?b.clone().multiplyScalar(dot/(bl*bl)):new THREE.Vector3();
+
+  arrow(a,COLORS.a,'a',1);
+  arrow(b,COLORS.b,'b',-1);
+  angleArc(a,b);
+
+  if(mode==='projection'&&bl>1e-9){
+    arrow(proj,COLORS.proj,'proj',1);
+    lineBetween(proj,a,COLORS.proj,true);
+  }
+  if(mode==='cross'){
+    planeFromVectors(a,b);
+    if(cross.length()>1e-9){
+      const shown=cross.clone().normalize().multiplyScalar(Math.min(5,Math.max(2.2,cross.length()*.3)));
+      arrow(shown,COLORS.cross,'a x b',-1);
+    }
+  }
+
+  $('alen').textContent=fmt(al);$('blen').textContent=fmt(bl);
+  $('angle').textContent=Number.isFinite(angle)?fmt(angle,1)+'°':'—';
+  $('dot').textContent=fmt(dot);$('cross').textContent=fmtV(cross);$('proj').textContent=fmtV(proj);
+
+  $('formula').textContent=
+`向量 a = ${fmtV(a)}
+向量 b = ${fmtV(b)}
+
+点积 a · b = ${fmt(dot)}
+cos θ = (a · b) / (|a| |b|)
+叉积 a × b = ${fmtV(cross)}`;
+
+  $('modeNote').textContent=mode==='basic'
+    ?'夹角模式：重点观察两个向量的方向和夹角。若 a · b = 0，则两个向量互相垂直。'
+    :mode==='projection'
+    ?'正交投影：绿色向量是向量 a 在向量 b 方向上的投影，绿色虚线连接 a 的端点和投影点。'
+    :'叉积 / 法向：紫色向量表示叉积 a × b，它垂直于向量 a、b 所张成的平面；淡紫色平面帮助理解法向量。';
+
+  $('status').textContent=mode==='basic'
+    ?'3D 标签“a”“b”已从箭头尖端侧向移开，并用细线指回对应端点。'
+    :mode==='projection'
+    ?'绿色“proj”标签与“a”“b”分开显示，避免端点文字重叠。'
+    :'紫色“a x b”标签与法向箭头侧向错开，可旋转视角检查其垂直关系。';
+}
+
+['ax','ay','az','bx','by','bz'].forEach(id=>$(id).addEventListener('input',update));
+document.querySelectorAll('.modeBtn').forEach(b=>b.addEventListener('click',()=>{
+  mode=b.dataset.mode;document.querySelectorAll('.modeBtn').forEach(x=>x.classList.toggle('active',x===b));update();
+}));
+
+function setView(pos){
+  camera.position.copy(pos);controls.target.set(0,1,0);controls.update();
+}
+$('isoView').onclick=()=>setView(new THREE.Vector3(9,7,10));
+$('frontView').onclick=()=>setView(new THREE.Vector3(0,2,13));
+$('sideView').onclick=()=>setView(new THREE.Vector3(13,2,0));
+$('topView').onclick=()=>setView(new THREE.Vector3(.001,14,.001));
+
+function resize(){
+  const r=$('three').getBoundingClientRect();
+  if(r.width<2||r.height<2)return;
+  renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();
+}
+new ResizeObserver(()=>requestAnimationFrame(resize)).observe($('three'));
+window.addEventListener('resize',()=>requestAnimationFrame(resize));
+resize();update();
+function loop(){controls.update();renderer.render(scene,camera);requestAnimationFrame(loop)}
+loop();
+})();
+</script>
+</body>
+</html>

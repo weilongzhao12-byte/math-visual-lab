@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f7fb" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>立方体堆与三视图 · 跨端版 V4.1</title>
+  <style>
+    :root{
+      --bg:#f4f7fb; --card:#ffffff; --text:#172033; --muted:#667085;
+      --line:#d8e0eb; --accent:#2563eb; --accent-soft:#eaf2ff;
+      --danger:#dc2626; --shadow:0 8px 30px rgba(20,35,60,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text)}
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      -webkit-font-smoothing:antialiased;
+      overscroll-behavior-y:none;
+    }
+    button,select,input{font:inherit}
+    button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+    .app{
+      min-height:100vh;min-height:100dvh;
+      display:grid;grid-template-columns:246px minmax(500px,1fr) 300px;
+      gap:10px;padding:10px;
+    }
+    .panel{
+      background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+      box-shadow:var(--shadow);overflow:hidden;
+    }
+
+    /* 左侧控制 */
+    .side{padding:15px;overflow:auto;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px)}
+    .controlDetails>summary{display:none}
+    h1{font-size:20px;margin:0 0 5px;letter-spacing:.2px}
+    .subtitle{font-size:12.5px;color:var(--muted);line-height:1.55;margin-bottom:14px}
+    h2{font-size:13px;margin:16px 0 8px}
+    .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    button{
+      min-height:42px;border:1px solid var(--line);background:#fff;color:var(--text);
+      border-radius:11px;padding:9px 8px;cursor:pointer;font-weight:650;
+      transition:transform .12s,border-color .12s,background .12s,box-shadow .12s;
+    }
+    @media(hover:hover) and (pointer:fine){
+      button:hover{transform:translateY(-1px);border-color:#aeb9c8;box-shadow:0 3px 10px rgba(20,35,60,.06)}
+    }
+    button:active{transform:scale(.98)}
+    button.active{background:var(--accent);color:white;border-color:var(--accent)}
+    button.danger{color:var(--danger)}
+    .row{display:flex;gap:8px;align-items:center;margin-top:9px}
+    .row label{font-size:12.5px;min-width:66px;color:#344054}
+    select{
+      min-height:40px;width:100%;padding:8px 10px;border:1px solid var(--line);
+      border-radius:10px;background:#fff;color:var(--text)
+    }
+    .switchrow{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      margin-top:10px;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:#fbfcfe;
+      font-size:12.5px;
+    }
+    .switchrow input{width:18px;height:18px;accent-color:var(--accent)}
+    .hint{
+      font-size:12px;color:var(--muted);line-height:1.65;background:#f8fafc;
+      border:1px solid #edf1f6;border-radius:11px;padding:9px 10px;margin-top:10px
+    }
+    .stat{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .pill{background:#f8fafc;border:1px solid var(--line);border-radius:11px;padding:9px}
+    .pill b{display:block;font-size:18px;line-height:1.1}.pill span{font-size:11px;color:var(--muted)}
+    .footer{font-size:10.5px;color:var(--muted);line-height:1.55;margin-top:10px}
+
+    /* 3D 主区 */
+    .stage{
+      position:relative;height:calc(100vh - 20px);height:calc(100dvh - 20px);
+      min-height:620px;overflow:hidden;background:#f8fbff;
+    }
+    #three{position:absolute;inset:0;width:100%;height:100%}
+    #three canvas{display:block;width:100%!important;height:100%!important;touch-action:none;outline:none}
+    .stageBrand{
+      position:absolute;left:14px;top:14px;z-index:5;
+      background:rgba(255,255,255,.90);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+      border:1px solid rgba(216,224,235,.95);border-radius:12px;padding:8px 11px;
+      box-shadow:0 4px 16px rgba(20,35,60,.06);pointer-events:none
+    }
+    .stageBrand b{font-size:13px}.stageBrand span{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
+    .viewQuick{
+      position:absolute;right:12px;top:12px;z-index:8;display:grid;grid-template-columns:repeat(2,44px);gap:7px;
+    }
+    .iconbtn{
+      width:44px;height:44px;min-height:44px;padding:0;border-radius:12px;
+      background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+      box-shadow:0 4px 16px rgba(20,35,60,.07);font-size:11px;
+    }
+    .desktopHint{
+      position:absolute;left:14px;bottom:14px;z-index:5;
+      background:rgba(255,255,255,.90);border:1px solid var(--line);border-radius:10px;
+      padding:7px 9px;font-size:10.5px;color:var(--muted);pointer-events:none
+    }
+    .mobileEditbar{display:none}
+    .toast{
+      position:absolute;left:50%;bottom:74px;z-index:30;transform:translate(-50%,10px);
+      opacity:0;pointer-events:none;background:rgba(17,24,39,.88);color:#fff;
+      padding:8px 12px;border-radius:999px;font-size:12px;transition:.18s;white-space:nowrap
+    }
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .stage.pseudo-fullscreen{
+      position:fixed!important;inset:0!important;z-index:9999!important;width:100vw!important;height:100vh!important;height:100dvh!important;
+      min-height:0!important;border-radius:0!important;
+    }
+
+    /* 三视图 */
+    .views{padding:12px;display:flex;flex-direction:column;gap:10px;overflow:auto;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px)}
+    .viewtabs{display:none}
+    .viewcard{border:1px solid var(--line);border-radius:13px;padding:9px;background:#fff}
+    .viewtitle{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:750;margin-bottom:5px}
+    .viewtitle small{font-size:10px;font-weight:450;color:var(--muted)}
+    canvas.ortho{width:100%;aspect-ratio:1/1;background:#fbfdff;border-radius:8px;display:block}
+    .legend{font-size:10.5px;color:var(--muted);line-height:1.55;padding:2px 2px 0}
+
+    @media(max-width:1120px){
+      .app{grid-template-columns:230px 1fr}
+      .stage{height:640px;min-height:560px}
+      .views{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);max-height:none}
+      .legend{grid-column:1/-1}
+      .side{max-height:640px}
+    }
+
+    @media(max-width:760px){
+      body{overflow-x:hidden}
+      .app{display:flex;flex-direction:column;gap:8px;padding:
+        max(8px,env(safe-area-inset-top))
+        max(8px,env(safe-area-inset-right))
+        max(8px,env(safe-area-inset-bottom))
+        max(8px,env(safe-area-inset-left))}
+      .stage{
+        order:1;height:62vh;height:62dvh;min-height:420px;max-height:650px;
+        border-radius:15px;
+      }
+      .side{order:2;max-height:none;padding:0}
+      .controlDetails>summary{
+        display:flex;align-items:center;justify-content:space-between;list-style:none;
+        padding:13px 14px;font-size:14px;font-weight:750;cursor:pointer;min-height:48px;
+      }
+      .controlDetails>summary::-webkit-details-marker{display:none}
+      .controlDetails>summary::after{content:"展开 / 收起";font-size:11px;color:var(--muted);font-weight:500}
+      .controlBody{padding:0 13px 13px}
+      .controlBody h1,.controlBody>.subtitle{display:none}
+      h2{margin-top:13px}
+      button{min-height:44px}
+      .desktopOnlyModes{display:none}
+      .desktopHint{display:none}
+      .stageBrand{left:10px;top:10px;padding:7px 9px}
+      .stageBrand span{display:none}
+      .viewQuick{right:9px;top:9px;grid-template-columns:repeat(3,40px);gap:6px}
+      .iconbtn{width:40px;height:40px;min-height:40px;border-radius:11px;font-size:10px}
+      .mobileEditbar{
+        display:grid;grid-template-columns:repeat(5,1fr);gap:6px;
+        position:absolute;left:8px;right:8px;bottom:max(8px,env(safe-area-inset-bottom));z-index:12;
+        padding:7px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+        border:1px solid rgba(216,224,235,.95);border-radius:14px;box-shadow:0 8px 30px rgba(20,35,60,.12)
+      }
+      .mobileEditbar button{min-height:46px;padding:4px;font-size:11px;border-radius:10px}
+      .mobileEditbar button .big{display:block;font-size:17px;line-height:18px;margin-bottom:2px}
+      .toast{bottom:78px}
+      .views{order:3;display:block;max-height:none;padding:10px}
+      .viewtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:9px}
+      .viewtabs button{min-height:40px;font-size:12px}
+      .viewcard{display:none;padding:10px}
+      .viewcard.active{display:block}
+      canvas.ortho{max-height:60vh}
+      .legend{margin-top:8px}
+    }
+
+    @media(max-width:380px){
+      .stage{min-height:390px}
+      .viewQuick{grid-template-columns:repeat(3,38px)}
+      .iconbtn{width:38px;height:38px;min-height:38px}
+      .mobileEditbar{gap:4px;padding:5px}
+      .mobileEditbar button{font-size:10px}
+    }
+  </style>
+<style>.lab-home-link{position:fixed;left:max(10px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));z-index:10000;text-decoration:none;background:rgba(15,23,42,.88);color:#fff;padding:9px 12px;border-radius:999px;font:600 12px system-ui,-apple-system,"Segoe UI","PingFang SC",sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.15);backdrop-filter:blur(8px)}@media(max-width:760px){.lab-home-link{top:auto;bottom:max(10px,env(safe-area-inset-bottom));font-size:11px;padding:8px 10px}}</style>
+</head>
+<body>
+<a class="lab-home-link" href="./index.html">← 数学实验室</a>
+<div class="app">
+  <section class="panel side" id="sidePanel">
+    <details class="controlDetails" open>
+      <summary>编辑与模型设置</summary>
+      <div class="controlBody">
+        <h1>立方体堆与三视图</h1>
+        <div class="subtitle">适配 Windows、iPhone、iPad 和安卓。拖动旋转，双指或滚轮缩放；改变立方体后，三视图实时更新。</div>
+
+        <div class="desktopOnlyModes">
+          <h2>编辑模式</h2>
+          <div class="toolbar">
+            <button class="modeBtn active" data-mode="browse">◎ 观察</button>
+            <button class="modeBtn" data-mode="add">＋ 添加</button>
+            <button class="modeBtn" data-mode="remove">－ 删除</button>
+            <button class="modeBtn" data-mode="move">↔ 移动</button>
+          </div>
+        </div>
+
+        <div class="hint" id="modeHint">观察模式：拖动模型自由旋转；滚轮或双指缩放。需要修改模型时切换到添加、删除或移动。</div>
+
+        <h2>模型设置</h2>
+        <div class="row">
+          <label>底面网格</label>
+          <select id="gridSize" aria-label="底面网格">
+            <option value="4">4 × 4</option>
+            <option value="5" selected>5 × 5</option>
+            <option value="6">6 × 6</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>最大高度</label>
+          <select id="maxHeight" aria-label="最大高度">
+            <option>3</option><option selected>4</option><option>5</option><option>6</option>
+          </select>
+        </div>
+        <label class="switchrow">
+          <span>俯视图显示层数提示</span>
+          <input id="showHeights" type="checkbox" />
+        </label>
+
+        <h2>快捷操作</h2>
+        <div class="toolbar">
+          <button id="exampleBtn">示例模型</button>
+          <button id="randomBtn">随机生成</button>
+          <button id="undoBtn">撤销一步</button>
+          <button id="clearBtn" class="danger">全部清空</button>
+        </div>
+
+        <div class="stat">
+          <div class="pill"><b id="cubeCount">0</b><span>立方体总数</span></div>
+          <div class="pill"><b id="columnCount">0</b><span>占用底面格</span></div>
+        </div>
+
+        <div class="footer">模型会自动保存在当前浏览器中。俯视图的层数数字属于辅助提示，默认关闭，以保持标准三视图表达。</div>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel stage" id="stage">
+    <div class="stageBrand"><b>3D 立方体堆</b><span>拖动旋转 · 滚轮 / 双指缩放</span></div>
+
+    <div class="viewQuick" aria-label="快速视角">
+      <button class="iconbtn" id="isoCam" title="等轴测">立体</button>
+      <button class="iconbtn" id="frontCam" title="主视方向">主视</button>
+      <button class="iconbtn" id="leftCam" title="左视方向">左视</button>
+      <button class="iconbtn" id="topCam" title="俯视方向">俯视</button>
+      <button class="iconbtn" id="fitCam" title="适配模型">适配</button>
+      <button class="iconbtn" id="fullBtn" title="全屏">全屏</button>
+    </div>
+
+    <div id="three"></div>
+    <div class="desktopHint">左键拖动旋转 · 滚轮缩放 · 右键拖动平移 · 快捷键 1/2/3/4 切换视角</div>
+    <div id="toast" class="toast"></div>
+
+    <div class="mobileEditbar" aria-label="移动端编辑工具栏">
+      <button class="mobileMode modeBtn active" data-mode="browse"><span class="big">◎</span>观察</button>
+      <button class="mobileMode modeBtn" data-mode="add"><span class="big">＋</span>添加</button>
+      <button class="mobileMode modeBtn" data-mode="remove"><span class="big">－</span>删除</button>
+      <button class="mobileMode modeBtn" data-mode="move"><span class="big">↔</span>移动</button>
+      <button id="mobileUndo"><span class="big">↶</span>撤销</button>
+    </div>
+  </section>
+
+  <section class="panel views">
+    <div class="viewtabs">
+      <button class="viewTab active" data-view="front">主视图</button>
+      <button class="viewTab" data-view="left">左视图</button>
+      <button class="viewTab" data-view="top">俯视图</button>
+    </div>
+
+    <div class="viewcard active" data-card="front">
+      <div class="viewtitle"><span>主视图</span><small>从前向后看</small></div>
+      <canvas id="frontCanvas" class="ortho"></canvas>
+    </div>
+    <div class="viewcard" data-card="left">
+      <div class="viewtitle"><span>左视图</span><small>从左向右看</small></div>
+      <canvas id="leftCanvas" class="ortho"></canvas>
+    </div>
+    <div class="viewcard" data-card="top">
+      <div class="viewtitle"><span>俯视图</span><small>从上往下看</small></div>
+      <canvas id="topCanvas" class="ortho"></canvas>
+    </div>
+    <div class="legend">标准三视图只表示投影轮廓与占用位置；如需训练“每个位置有几层”，可在设置中打开俯视图层数提示。</div>
+  </section>
+</div>
+
+<script src="./vendor/three.min.js"></script>
+<script src="./vendor/OrbitControls.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const mount = document.getElementById('three');
+  const stage = document.getElementById('stage');
+  const toastEl = document.getElementById('toast');
+  const STORAGE_KEY = 'cube-three-views-v4';
+
+  let N = 5;
+  let maxH = 4;
+  let heights = Array.from({length:N},()=>Array(N).fill(0));
+  let history = [];
+  let mode = 'browse';
+  let selectedMove = null;
+  let showHeights = false;
+  let cameraTween = null;
+  let toastTimer = null;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xf8fbff);
+
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 120);
+  const renderer = new THREE.WebGLRenderer({antialias:true, alpha:false, powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.domElement.setAttribute('aria-label','可旋转的三维立方体堆');
+  renderer.domElement.setAttribute('tabindex','0');
+  mount.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.075;
+  controls.minDistance = 2.8;
+  controls.maxDistance = 65;
+  controls.zoomSpeed = 1.35;
+  controls.rotateSpeed = 0.72;
+  controls.panSpeed = 0.85;
+  controls.screenSpacePanning = true;
+  controls.maxPolarAngle = Math.PI * 0.495;
+  controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+  controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
+  controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+  controls.touches.ONE = THREE.TOUCH.ROTATE;
+  controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+
+  controls.addEventListener('start',()=>{ cameraTween = null; });
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xb7c2d2, 1.05));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.92);
+  dir.position.set(7, 11, 8);
+  dir.castShadow = true;
+  dir.shadow.mapSize.set(1536,1536);
+  dir.shadow.camera.near = 1;
+  dir.shadow.camera.far = 35;
+  scene.add(dir);
+
+  const modelGroup = new THREE.Group();
+  scene.add(modelGroup);
+
+  // 移动/添加时用于可靠命中的底面格子点击层
+  const tileGroup = new THREE.Group();
+  tileGroup.name = 'tileGroup';
+  scene.add(tileGroup);
+
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+
+  const cubeSize = 0.96;
+  const cubeGeo = new THREE.BoxGeometry(cubeSize,cubeSize,cubeSize);
+  const edgeGeo = new THREE.EdgesGeometry(cubeGeo);
+  const cubeMat = new THREE.MeshStandardMaterial({color:0x72a6f7, roughness:.58, metalness:.015});
+  const selectedMat = new THREE.MeshStandardMaterial({color:0xffb020, emissive:0x3a2200, emissiveIntensity:.10, roughness:.50});
+  const edgeMat = new THREE.LineBasicMaterial({color:0x172033, transparent:true, opacity:.98});
+  const planeMat = new THREE.MeshBasicMaterial({transparent:true, opacity:0, side:THREE.DoubleSide});
+  let hitPlane = null;
+
+  function showToast(msg){
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    toastTimer = setTimeout(()=>toastEl.classList.remove('show'), 1300);
+  }
+
+  function cloneHeights(){ return heights.map(r=>r.slice()); }
+  function pushHistory(){
+    history.push(cloneHeights());
+    if(history.length>60) history.shift();
+  }
+  function centerOffset(){ return (N-1)/2; }
+
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({N,maxH,heights,showHeights}));
+    }catch(e){}
+  }
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return false;
+      const s = JSON.parse(raw);
+      if(![4,5,6].includes(s.N) || ![3,4,5,6].includes(s.maxH) || !Array.isArray(s.heights)) return false;
+      N = s.N; maxH = s.maxH; heights = s.heights;
+      showHeights = !!s.showHeights;
+      document.getElementById('gridSize').value = String(N);
+      document.getElementById('maxHeight').value = String(maxH);
+      document.getElementById('showHeights').checked = showHeights;
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function rebuildBase(){
+    const old = scene.getObjectByName('baseGroup');
+    if(old) scene.remove(old);
+
+    while(tileGroup.children.length){
+      const child = tileGroup.children.pop();
+      if(child.geometry) child.geometry.dispose();
+      if(child.material) child.material.dispose();
+    }
+
+    const g = new THREE.Group(); g.name='baseGroup';
+    const size = N;
+
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(size+.18,.12,size+.18),
+      new THREE.MeshStandardMaterial({color:0xe7edf5, roughness:.9})
+    );
+    base.position.y = -0.06;
+    base.receiveShadow = true;
+    g.add(base);
+
+    const grid = new THREE.GridHelper(size, N, 0x65758b, 0xaab7c8);
+    grid.position.y = 0.006;
+    g.add(grid);
+
+    const arrowFront = new THREE.ArrowHelper(
+      new THREE.Vector3(0,0,-1),
+      new THREE.Vector3(-size/2-.40,.035,size/2+.14),
+      0.9,0xef4444,.16,.10
+    );
+    g.add(arrowFront);
+
+    // 保留整块命中平面作为兜底
+    hitPlane = new THREE.Mesh(new THREE.PlaneGeometry(size,size), planeMat);
+    hitPlane.rotation.x = -Math.PI/2;
+    hitPlane.position.y = 0.012;
+    hitPlane.name='hitPlane';
+    g.add(hitPlane);
+
+    // 每个底面格都建立独立透明点击区域，比根据坐标换算稳定
+    const off = centerOffset();
+    for(let x=0;x<N;x++){
+      for(let z=0;z<N;z++){
+        const tileMat = new THREE.MeshBasicMaterial({
+          color:0x3b82f6, transparent:true, opacity:0,
+          side:THREE.DoubleSide, depthWrite:false
+        });
+        const tile = new THREE.Mesh(new THREE.PlaneGeometry(0.96,0.96), tileMat);
+        tile.rotation.x = -Math.PI/2;
+        tile.position.set(x-off, 0.018, z-off);
+        tile.userData = {x,z};
+        tile.name = 'hitTile';
+        tileGroup.add(tile);
+      }
+    }
+
+    scene.add(g);
+  }
+
+  function rebuildModel(){
+    while(modelGroup.children.length) modelGroup.remove(modelGroup.children[0]);
+
+    const off = centerOffset();
+    for(let x=0;x<N;x++){
+      for(let z=0;z<N;z++){
+        for(let y=0;y<heights[x][z];y++){
+          const mesh = new THREE.Mesh(cubeGeo, cubeMat);
+          mesh.position.set(x-off, y + cubeSize/2, z-off);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          mesh.userData = {x,z,y};
+          mesh.name = 'cube';
+
+          const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+          edges.renderOrder = 3;
+          mesh.add(edges);
+          modelGroup.add(mesh);
+        }
+      }
+    }
+    refreshSelectionHighlight();
+    updateViews();
+    updateStats();
+    saveState();
+  }
+
+  function refreshSelectionHighlight(){
+    for(const c of modelGroup.children) c.material = cubeMat;
+    if(selectedMove){
+      const {x,z} = selectedMove;
+      const topY = heights[x][z]-1;
+      const obj = modelGroup.children.find(c=>c.userData.x===x && c.userData.z===z && c.userData.y===topY);
+      if(obj) obj.material = selectedMat;
+    }
+  }
+
+  function maxModelHeight(){
+    let h=1;
+    for(let x=0;x<N;x++) for(let z=0;z<N;z++) h=Math.max(h,heights[x][z]);
+    return h;
+  }
+
+  function fitDistance(){
+    const h = maxModelHeight();
+    const radius = 0.5 * Math.sqrt(N*N + N*N + h*h);
+    const fov = THREE.MathUtils.degToRad(camera.fov);
+    return Math.max(7.5, radius / Math.sin(fov/2) * 1.08);
+  }
+
+  function tweenCamera(position, target, duration=360){
+    cameraTween = {
+      t0: performance.now(), duration,
+      fromPos: camera.position.clone(), toPos: position.clone(),
+      fromTarget: controls.target.clone(), toTarget: target.clone()
+    };
+  }
+
+  function targetPoint(){
+    return new THREE.Vector3(0, Math.max(.55, maxModelHeight()*.38), 0);
+  }
+
+  function isoCamera(){
+    const d = fitDistance();
+    const t = targetPoint();
+    tweenCamera(new THREE.Vector3(d*.66, d*.55, d*.72), t);
+  }
+  function frontCamera(){
+    const d = fitDistance();
+    const t = targetPoint();
+    tweenCamera(new THREE.Vector3(0, t.y, d), t);
+  }
+  function leftCamera(){
+    const d = fitDistance();
+    const t = targetPoint();
+    tweenCamera(new THREE.Vector3(-d, t.y, 0.001), t);
+  }
+  function topCamera(){
+    const d = Math.max(fitDistance()*.92, 8);
+    const t = new THREE.Vector3(0,0,0);
+    tweenCamera(new THREE.Vector3(0,d,0.001), t);
+  }
+  function fitCamera(){ isoCamera(); }
+
+  function setMode(next){
+    mode = next;
+    selectedMove = null;
+    document.querySelectorAll('.modeBtn').forEach(b=>b.classList.toggle('active', b.dataset.mode===next));
+    const hints = {
+      browse:'观察模式：拖动模型自由旋转；滚轮或双指缩放。需要修改模型时切换到添加、删除或移动。',
+      add:'添加模式：轻点底面格或某一列立方体，在该列顶部增加一个立方体；拖动仍可旋转。',
+      remove:'删除模式：轻点任意一列，删除该列最上方的一个立方体。',
+      move:'移动模式：先点一个有方块的位置选中顶部方块，再点任意底面格或另一列完成移动；再次点原位置可取消。'
+    };
+    document.getElementById('modeHint').textContent = hints[next];
+    refreshSelectionHighlight();
+  }
+
+  function getPointerEvent(e){
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left)/rect.width)*2-1;
+    pointer.y = -((e.clientY - rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(pointer,camera);
+  }
+
+  function planeCell(intersection){
+    const p = intersection.point;
+    const off = N/2;
+    const x = Math.floor(p.x + off);
+    const z = Math.floor(p.z + off);
+    if(x<0||x>=N||z<0||z>=N) return null;
+    return {x,z};
+  }
+
+  function getClickedCell(){
+    const cubeHits = raycaster.intersectObjects(modelGroup.children,false);
+    const tileHits = raycaster.intersectObjects(tileGroup.children,false);
+    const planeHits = hitPlane ? raycaster.intersectObject(hitPlane,false) : [];
+
+    // 点击已有立方体时，直接确定其所在列
+    if(cubeHits.length){
+      const d = cubeHits[0].object.userData;
+      return {cell:{x:d.x,z:d.z}, cubeHit:cubeHits[0]};
+    }
+    // 点击空白底面格时，优先使用独立 tile
+    if(tileHits.length){
+      const d = tileHits[0].object.userData;
+      return {cell:{x:d.x,z:d.z}, cubeHit:null};
+    }
+    // 最后的兜底
+    if(planeHits.length){
+      return {cell:planeCell(planeHits[0]), cubeHit:null};
+    }
+    return {cell:null, cubeHit:null};
+  }
+
+  function editAtPointer(e){
+    if(mode==='browse') return;
+    getPointerEvent(e);
+
+    const {cell, cubeHit} = getClickedCell();
+
+    if(mode==='add'){
+      if(!cell) return;
+      if(heights[cell.x][cell.z] >= maxH){
+        showToast('已经达到当前最大高度');
+        return;
+      }
+      pushHistory();
+      heights[cell.x][cell.z]++;
+      rebuildModel();
+      showToast('已添加 1 个方块');
+    }
+
+    else if(mode==='remove'){
+      if(!cell || heights[cell.x][cell.z]===0){
+        showToast('这里没有可以删除的方块');
+        return;
+      }
+      pushHistory();
+      heights[cell.x][cell.z]--;
+      selectedMove=null;
+      rebuildModel();
+      showToast('已删除顶部方块');
+    }
+
+    else if(mode==='move'){
+      // 第一步：必须点击有方块的列作为来源
+      if(!selectedMove){
+        if(!cell || heights[cell.x][cell.z]===0){
+          showToast('请先点一个有方块的位置');
+          return;
+        }
+        selectedMove={x:cell.x,z:cell.z};
+        refreshSelectionHighlight();
+        document.getElementById('modeHint').textContent =
+          '已选中黄色顶部方块。现在点击任意目标格；点原位置可取消。';
+        showToast('已选中顶部方块');
+        return;
+      }
+
+      // 第二步：点击任意目标格
+      if(!cell){
+        showToast('请点击一个底面格作为目标');
+        return;
+      }
+
+      const src=selectedMove;
+
+      // 点自己 = 取消
+      if(cell.x===src.x && cell.z===src.z){
+        selectedMove=null;
+        refreshSelectionHighlight();
+        document.getElementById('modeHint').textContent =
+          '移动模式：先轻点一列选中顶部方块，再轻点目标位置完成移动。';
+        showToast('已取消移动');
+        return;
+      }
+
+      if(heights[cell.x][cell.z] >= maxH){
+        showToast('目标位置已经达到最大高度');
+        return;
+      }
+
+      pushHistory();
+      heights[src.x][src.z]--;
+      heights[cell.x][cell.z]++;
+      selectedMove=null;
+      rebuildModel();
+      document.getElementById('modeHint').textContent =
+        '移动模式：先轻点一列选中顶部方块，再轻点目标位置完成移动。';
+      showToast('移动完成');
+    }
+  }
+
+  /* 轻点用于编辑，拖动用于旋转：针对触屏提高误触容忍度 */
+  let pointerDown=null;
+  const activePointers=new Set();
+
+  renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
+  renderer.domElement.addEventListener('pointerdown',e=>{
+    activePointers.add(e.pointerId);
+    pointerDown={id:e.pointerId,x:e.clientX,y:e.clientY,time:performance.now(),type:e.pointerType,multi:activePointers.size>1};
+  },{passive:true});
+
+  renderer.domElement.addEventListener('pointermove',e=>{
+    if(pointerDown && activePointers.size>1) pointerDown.multi=true;
+  },{passive:true});
+
+  renderer.domElement.addEventListener('pointerup',e=>{
+    activePointers.delete(e.pointerId);
+    if(!pointerDown || pointerDown.id!==e.pointerId) return;
+
+    const moved=Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y);
+    const elapsed=performance.now()-pointerDown.time;
+    const threshold=pointerDown.type==='touch' ? 13 : 5;
+    const valid=!pointerDown.multi && moved<=threshold && elapsed<550 && (e.button===0 || pointerDown.type==='touch');
+    pointerDown=null;
+    if(valid) editAtPointer(e);
+  },{passive:true});
+
+  renderer.domElement.addEventListener('pointercancel',e=>{
+    activePointers.delete(e.pointerId); pointerDown=null;
+  },{passive:true});
+
+  function updateStats(){
+    let cubes=0,cols=0;
+    for(let x=0;x<N;x++) for(let z=0;z<N;z++){
+      cubes+=heights[x][z];
+      if(heights[x][z]>0) cols++;
+    }
+    document.getElementById('cubeCount').textContent=cubes;
+    document.getElementById('columnCount').textContent=cols;
+  }
+
+  function setupCanvas(canvas){
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const rect=canvas.getBoundingClientRect();
+    const side=Math.max(220,Math.floor(rect.width*dpr));
+    canvas.width=side; canvas.height=side;
+    return {ctx:canvas.getContext('2d'),w:side,h:side};
+  }
+
+  function drawGridView(canvas,cols,rows,filledFn,labelFn){
+    const {ctx,w,h}=setupCanvas(canvas);
+    ctx.clearRect(0,0,w,h);
+    const pad=w*.09;
+    const cell=Math.min((w-2*pad)/cols,(h-2*pad)/rows);
+    const ox=(w-cell*cols)/2;
+    const oy=(h-cell*rows)/2;
+
+    ctx.lineWidth=Math.max(1.4,w/360);
+    ctx.font=`600 ${Math.floor(cell*.29)}px system-ui`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const x=ox+c*cell,y=oy+r*cell;
+        if(filledFn(c,r)){
+          ctx.fillStyle='#cfe2ff';
+          ctx.fillRect(x+1.5,y+1.5,cell-3,cell-3);
+        }
+        ctx.strokeStyle='#475569';
+        ctx.strokeRect(x,y,cell,cell);
+        const lab=labelFn ? labelFn(c,r) : '';
+        if(lab!==''){
+          ctx.fillStyle='#173b78';
+          ctx.fillText(lab,x+cell/2,y+cell/2);
+        }
+      }
+    }
+  }
+
+  function updateViews(){
+    const front=Array.from({length:N},(_,x)=>Math.max(...heights[x]));
+    drawGridView(
+      document.getElementById('frontCanvas'),N,maxH,
+      (c,r)=>(maxH-r)<=front[c],null
+    );
+
+    const left=Array.from({length:N},(_,z)=>Math.max(...Array.from({length:N},(_,x)=>heights[x][z])));
+    drawGridView(
+      document.getElementById('leftCanvas'),N,maxH,
+      (c,r)=>(maxH-r)<=left[N-1-c],null
+    );
+
+    drawGridView(
+      document.getElementById('topCanvas'),N,N,
+      (c,r)=>heights[c][r]>0,
+      showHeights ? ((c,r)=>heights[c][r]>0 ? String(heights[c][r]) : '') : null
+    );
+  }
+
+  function example(){
+    pushHistory();
+    heights=Array.from({length:N},()=>Array(N).fill(0));
+    const pts=[
+      [0,0,1],[1,0,2],[2,0,1],[1,1,3],[2,1,2],[3,1,1],
+      [0,2,1],[1,2,2],[2,2,4],[3,2,2],[4,2,1],[2,3,2],[3,3,1]
+    ];
+    pts.forEach(([x,z,h])=>{ if(x<N&&z<N) heights[x][z]=Math.min(h,maxH); });
+    rebuildModel();
+  }
+
+  function randomize(){
+    pushHistory();
+    heights=Array.from({length:N},()=>Array(N).fill(0));
+    const target=Math.floor(N*N*(.32+Math.random()*.28));
+    let placed=0;
+    while(placed<target){
+      const x=Math.floor(Math.random()*N),z=Math.floor(Math.random()*N);
+      if(heights[x][z]===0){
+        heights[x][z]=1+Math.floor(Math.random()*maxH);
+        placed++;
+      }
+    }
+    rebuildModel();
+  }
+
+  function undo(){
+    if(!history.length){ showToast('没有可以撤销的操作'); return; }
+    heights=history.pop();
+    selectedMove=null;
+    rebuildModel();
+  }
+
+  function toggleFullscreen(){
+    if(document.fullscreenElement){
+      document.exitFullscreen().catch(()=>{});
+      return;
+    }
+    if(stage.requestFullscreen){
+      stage.requestFullscreen().catch(()=>{
+        stage.classList.toggle('pseudo-fullscreen');
+        setTimeout(resize,60);
+      });
+    }else{
+      stage.classList.toggle('pseudo-fullscreen');
+      setTimeout(resize,60);
+    }
+  }
+
+  document.addEventListener('fullscreenchange',()=>setTimeout(resize,60));
+  document.querySelectorAll('.modeBtn').forEach(btn=>btn.addEventListener('click',()=>setMode(btn.dataset.mode)));
+  document.getElementById('mobileUndo').onclick=undo;
+  document.getElementById('undoBtn').onclick=undo;
+  document.getElementById('isoCam').onclick=isoCamera;
+  document.getElementById('frontCam').onclick=frontCamera;
+  document.getElementById('leftCam').onclick=leftCamera;
+  document.getElementById('topCam').onclick=topCamera;
+  document.getElementById('fitCam').onclick=fitCamera;
+  document.getElementById('fullBtn').onclick=toggleFullscreen;
+  document.getElementById('exampleBtn').onclick=()=>{example();setTimeout(fitCamera,40)};
+  document.getElementById('randomBtn').onclick=randomize;
+  document.getElementById('clearBtn').onclick=()=>{
+    pushHistory();
+    heights=Array.from({length:N},()=>Array(N).fill(0));
+    selectedMove=null;
+    rebuildModel();
+  };
+
+  document.getElementById('gridSize').onchange=e=>{
+    N=parseInt(e.target.value,10);
+    history=[];
+    heights=Array.from({length:N},()=>Array(N).fill(0));
+    rebuildBase();
+    example();
+    setTimeout(fitCamera,50);
+  };
+
+  document.getElementById('maxHeight').onchange=e=>{
+    maxH=parseInt(e.target.value,10);
+    pushHistory();
+    for(let x=0;x<N;x++) for(let z=0;z<N;z++) heights[x][z]=Math.min(heights[x][z],maxH);
+    rebuildModel();
+    setTimeout(fitCamera,40);
+  };
+
+  document.getElementById('showHeights').onchange=e=>{
+    showHeights=e.target.checked;
+    updateViews();
+    saveState();
+  };
+
+  document.querySelectorAll('.viewTab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const v=btn.dataset.view;
+      document.querySelectorAll('.viewTab').forEach(b=>b.classList.toggle('active',b===btn));
+      document.querySelectorAll('.viewcard').forEach(c=>c.classList.toggle('active',c.dataset.card===v));
+      setTimeout(updateViews,20);
+    });
+  });
+
+  window.addEventListener('keydown',e=>{
+    if(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
+    if(e.key==='1') isoCamera();
+    else if(e.key==='2') frontCamera();
+    else if(e.key==='3') leftCamera();
+    else if(e.key==='4') topCamera();
+    else if(e.key.toLowerCase()==='f') fitCamera();
+    else if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); undo(); }
+  });
+
+  function resize(){
+    const rect=mount.getBoundingClientRect();
+    if(rect.width<2 || rect.height<2) return;
+    renderer.setSize(rect.width,rect.height,false);
+    camera.aspect=rect.width/rect.height;
+    camera.updateProjectionMatrix();
+    updateViews();
+  }
+  window.addEventListener('resize',()=>requestAnimationFrame(resize));
+  window.addEventListener('orientationchange',()=>setTimeout(resize,180));
+
+  if('ResizeObserver' in window){
+    new ResizeObserver(()=>requestAnimationFrame(resize)).observe(stage);
+  }
+
+  function animate(now){
+    if(cameraTween){
+      const p=Math.min(1,(now-cameraTween.t0)/cameraTween.duration);
+      const ease=1-Math.pow(1-p,3);
+      camera.position.lerpVectors(cameraTween.fromPos,cameraTween.toPos,ease);
+      controls.target.lerpVectors(cameraTween.fromTarget,cameraTween.toTarget,ease);
+      if(p>=1) cameraTween=null;
+    }
+    controls.update();
+    renderer.render(scene,camera);
+    requestAnimationFrame(animate);
+  }
+
+  const restored=loadState();
+  rebuildBase();
+  if(restored){
+    rebuildModel();
+  }else{
+    example();
+    history=[]; // 首次示例不占用撤销栈
+  }
+  isoCamera();
+  resize();
+  setMode('browse');
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

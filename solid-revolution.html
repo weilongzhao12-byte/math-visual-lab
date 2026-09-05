@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>旋转体生成器 · 贴合扫掠版</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#d8e1eb;--accent:#2563eb;--shadow:0 8px 26px rgba(18,38,65,.07)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text)}
+body{font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,input,select{font:inherit}button{min-height:42px;border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 10px;font-weight:650;cursor:pointer}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}input[type=range]{width:100%;accent-color:var(--accent)}
+select{width:100%;min-height:40px;border:1px solid var(--line);border-radius:9px;padding:6px}
+.page{min-height:100vh;padding:10px;display:grid;grid-template-columns:295px minmax(0,1fr);gap:10px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}.side{padding:16px}.stage{padding:10px;min-height:680px}
+.back{display:inline-block;text-decoration:none;color:var(--accent);font-size:12px;font-weight:700;margin-bottom:10px}.title{font-size:20px;margin:0 0 5px}.sub,.note{font-size:11px;line-height:1.65;color:var(--muted)}
+.section{margin-top:14px}.section h2{font-size:13px;margin:0 0 8px}.field{margin:9px 0}.fh{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.grid2,.grid3{display:grid;gap:7px}.grid2{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:repeat(3,1fr)}
+.note{border:1px solid #edf1f5;background:#f8fafc;border-radius:10px;padding:8px;margin-top:10px}
+.work{display:grid;grid-template-columns:300px minmax(0,1fr);gap:10px;height:100%}
+.profile{border:1px solid var(--line);border-radius:12px;padding:10px}.profile h3{font-size:13px;margin:0 0 7px}
+#profile{width:100%;aspect-ratio:1/1;background:#fbfdff;border:1px solid var(--line);border-radius:10px}
+.preview{position:relative;min-height:650px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#f8fbff}
+.preview #three{position:absolute;inset:0}.preview canvas{width:100%!important;height:100%!important;display:block;touch-action:none}
+.tip,.status{position:absolute;z-index:5;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-size:10.5px;color:var(--muted);pointer-events:none}
+.tip{left:10px;top:10px}.status{left:10px;bottom:10px;color:#344054}
+@media(max-width:930px){.page{grid-template-columns:245px 1fr}.work{grid-template-columns:1fr}.profile{display:grid;grid-template-columns:240px 1fr;gap:10px}.preview{min-height:500px}}
+@media(max-width:720px){.page{display:flex;flex-direction:column;padding:8px}.stage{order:1;min-height:0}.side{order:2}.profile{display:block}.preview{min-height:450px}button{min-height:44px}}
+</style>
+</head>
+<body>
+<div class="page">
+<aside class="panel side">
+<a class="back" href="./index.html">← 返回实验室</a>
+<h1 class="title">旋转体生成器</h1>
+<div class="sub">让二维图形绕红色轴真实转动：橙色生成面始终贴在蓝色扫掠体的当前边界上，二维图形扫过的空间连续形成圆柱、圆锥、圆台或球。</div>
+
+<div class="section"><h2>平面图形</h2>
+<select id="type"><option value="cylinder">矩形 → 圆柱</option><option value="cone">直角三角形 → 圆锥</option><option value="frustum">梯形 → 圆台</option><option value="sphere">半圆 → 球</option></select></div>
+
+<div class="section"><h2>尺寸</h2>
+<div class="field"><div class="fh"><b>底半径 R</b><span id="rText">2.0</span></div><input id="radius" type="range" min="0.8" max="3.5" step="0.1" value="2"></div>
+<div class="field"><div class="fh"><b>高度 H</b><span id="hText">4.0</span></div><input id="height" type="range" min="1.5" max="6" step="0.1" value="4"></div>
+<div class="field" id="topField"><div class="fh"><b>上底半径 r</b><span id="trText">1.0</span></div><input id="topRadius" type="range" min="0.2" max="3" step="0.1" value="1"></div>
+</div>
+
+<div class="section"><h2>动态演示</h2>
+<div class="grid2"><button id="play" class="primary">▶ 从 0° 开始播放</button><button id="reset">↺ 回到 0°</button></div>
+<div class="field"><div class="fh"><b>当前旋转角</b><span id="angleText">0°</span></div><input id="angle" type="range" min="0" max="360" step="1" value="0"></div>
+<div class="field"><div class="fh"><b>播放速度</b><span id="speedText">1.0×</span></div><input id="speed" type="range" min="0.4" max="2" step="0.1" value="1"></div>
+<div class="grid3"><button id="quarter">90°</button><button id="half">180°</button><button id="full">360°</button></div>
+</div>
+
+<div class="note">演示时，橙色半透明平面就是当前生成面，它的每条边都与蓝色扫掠体的最新边界贴合。暂停在 90°、180° 时可清楚观察生成面与旋转体边界的对应关系。</div>
+</aside>
+
+<section class="panel stage"><div class="work">
+<div class="profile"><h3>二维母线图形</h3><canvas id="profile" width="560" height="560"></canvas><div class="note">红色竖线是旋转轴。右图中的橙色平面与这里的蓝色二维图形对应。</div></div>
+<div class="preview"><div class="tip">拖动：旋转观察视角 · 滚轮 / 双指：缩放</div><div id="three"></div><div id="status" class="status">二维图形尚未旋转</div></div>
+</div></section>
+</div>
+
+<script src="./vendor/three.min.js"></script>
+<script src="./vendor/OrbitControls.js"></script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xf8fbff);
+const camera=new THREE.PerspectiveCamera(40,1,.1,100);camera.position.set(7,5.5,7.5);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));$('three').appendChild(renderer.domElement);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=3;controls.maxDistance=24;
+scene.add(new THREE.HemisphereLight(0xffffff,0xb7c2d2,1.1));const dl=new THREE.DirectionalLight(0xffffff,.9);dl.position.set(7,10,8);scene.add(dl);
+const group=new THREE.Group();scene.add(group);
+const axis=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-4.5,0),new THREE.Vector3(0,4.5,0)]),new THREE.LineBasicMaterial({color:0xef4444}));
+scene.add(axis);
+let sweepMesh=null,wire=null,profileMesh=null,profileEdge=null,leadingRim=null;
+let playing=false,lastTime=performance.now(),lastBuild=0;
+
+function vals(){return{type:$('type').value,R:+$('radius').value,H:+$('height').value,r:+$('topRadius').value,angle:+$('angle').value,speed:+$('speed').value}}
+function points(v){
+  const h=v.H/2;
+  if(v.type==='cylinder')return[new THREE.Vector2(0,-h),new THREE.Vector2(v.R,-h),new THREE.Vector2(v.R,h),new THREE.Vector2(0,h)];
+  if(v.type==='cone')return[new THREE.Vector2(0,-h),new THREE.Vector2(v.R,-h),new THREE.Vector2(0,h)];
+  if(v.type==='frustum')return[new THREE.Vector2(0,-h),new THREE.Vector2(v.R,-h),new THREE.Vector2(v.r,h),new THREE.Vector2(0,h)];
+  const pts=[];for(let i=0;i<=48;i++){const a=-Math.PI/2+i*Math.PI/48;pts.push(new THREE.Vector2(Math.cos(a)*v.R,Math.sin(a)*v.R))}return pts;
+}
+function dispose(o){if(!o)return;o.geometry?.dispose?.();if(o.material){if(o.material.map)o.material.map.dispose?.();o.material.dispose?.()}if(o.parent)o.parent.remove(o)}
+function shapeGeometry(pts){
+  const shape=new THREE.Shape();pts.forEach((p,i)=>i?shape.lineTo(p.x,p.y):shape.moveTo(p.x,p.y));shape.closePath();return new THREE.ShapeGeometry(shape,24);
+}
+function updateLeadingProfile(v){
+  dispose(profileMesh);dispose(profileEdge);dispose(leadingRim);
+  const pts=points(v),g=shapeGeometry(pts);
+  profileMesh=new THREE.Mesh(g,new THREE.MeshPhongMaterial({color:0xf59e0b,transparent:true,opacity:.62,side:THREE.DoubleSide,shininess:70,depthWrite:false}));
+  // LatheGeometry 在 phi=0 时，半径方向位于 +Z。
+  // PlaneGeometry 初始位于 XY 平面，因此要先绕 Y 轴 -90° 才与 +Z 起始母面重合。
+  // 随旋转角增加，再以同一方向继续旋转，从而始终贴合扫掠体的最新边界。
+  profileMesh.rotation.y=THREE.MathUtils.degToRad(v.angle)-Math.PI/2;
+  profileMesh.renderOrder=3;group.add(profileMesh);
+  profileEdge=new THREE.LineSegments(new THREE.EdgesGeometry(g),new THREE.LineBasicMaterial({color:0x9a3412,transparent:true,opacity:.95}));
+  profileEdge.rotation.y=profileMesh.rotation.y;profileEdge.renderOrder=4;group.add(profileEdge);
+
+  // 当前扫掠边界线：与生成面外轮廓完全共面，用于强调“贴合”。
+  const rimPts=pts.map(p=>new THREE.Vector3(p.x,p.y,0));
+  if(rimPts.length)rimPts.push(rimPts[0].clone());
+  leadingRim=new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(rimPts),
+    new THREE.LineBasicMaterial({color:0x7c2d12,transparent:true,opacity:1})
+  );
+  leadingRim.rotation.y=profileMesh.rotation.y;
+  leadingRim.renderOrder=5;group.add(leadingRim);
+}
+function rebuildSweep(force=false){
+  const v=vals();
+  $('rText').textContent=v.R.toFixed(1);$('hText').textContent=v.H.toFixed(1);$('trText').textContent=v.r.toFixed(1);
+  $('angleText').textContent=Math.round(v.angle)+'°';$('speedText').textContent=v.speed.toFixed(1)+'×';$('topField').style.display=v.type==='frustum'?'block':'none';
+  dispose(sweepMesh);dispose(wire);sweepMesh=wire=null;
+  if(v.angle>0.4){
+    const seg=Math.max(3,Math.ceil(v.angle/5));
+    const g=new THREE.LatheGeometry(points(v),seg,0,THREE.MathUtils.degToRad(v.angle));
+    sweepMesh=new THREE.Mesh(g,new THREE.MeshPhongMaterial({color:0x60a5fa,transparent:true,opacity:.62,side:THREE.DoubleSide,shininess:80,depthWrite:false}));
+    sweepMesh.renderOrder=1;group.add(sweepMesh);
+    wire=new THREE.LineSegments(new THREE.EdgesGeometry(g,32),new THREE.LineBasicMaterial({color:0x1e3a8a,transparent:true,opacity:.34}));
+    wire.renderOrder=2;group.add(wire);
+  }
+  updateLeadingProfile(v);drawProfile(v);updateStatus(v);
+}
+function drawProfile(v){
+  const c=$('profile'),ctx=c.getContext('2d'),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);ctx.fillStyle='#fbfdff';ctx.fillRect(0,0,w,h);
+  const cx=w*.28,cy=h/2,scale=Math.min(w,h)/(Math.max(v.H,v.R*2)*1.38);
+  ctx.strokeStyle='#ef4444';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(cx,45);ctx.lineTo(cx,h-45);ctx.stroke();
+  const pts=points(v);ctx.beginPath();pts.forEach((p,i)=>{const x=cx+p.x*scale,y=cy-p.y*scale;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.closePath();
+  ctx.fillStyle='rgba(96,165,250,.40)';ctx.fill();ctx.strokeStyle='#1d4ed8';ctx.lineWidth=4;ctx.stroke();
+  ctx.fillStyle='#475569';ctx.font='22px system-ui';ctx.fillText('旋转轴',cx-60,35);
+  ctx.fillText(v.type==='sphere'?'半圆':v.type==='frustum'?'梯形':v.type==='cone'?'直角三角形':'矩形',cx+65,h-25);
+  ctx.fillStyle='#9a3412';ctx.font='700 28px system-ui';ctx.fillText('θ = '+Math.round(v.angle)+'°',w*.58,52);
+  ctx.strokeStyle='#f59e0b';ctx.lineWidth=5;ctx.beginPath();ctx.arc(cx,cy,Math.min(75,scale*v.R*.5),-.6,.7);ctx.stroke();
+}
+function updateStatus(v){
+  const name=v.type==='sphere'?'球':v.type==='frustum'?'圆台':v.type==='cone'?'圆锥':'圆柱';
+  $('status').textContent=v.angle<1?'二维图形尚未旋转':v.angle<359?`生成面贴合扫掠边界：${Math.round(v.angle)}° · ${name}形成中`:`360° 完成 · 已形成${name}`;
+}
+function setAngle(a){$('angle').value=Math.max(0,Math.min(360,a));rebuildSweep()}
+['type','radius','height','topRadius'].forEach(id=>$(id).addEventListener('input',()=>{playing=false;$('play').textContent='▶ 从 0° 开始播放';rebuildSweep()}));
+$('angle').addEventListener('input',()=>{playing=false;$('play').textContent='▶ 继续播放';rebuildSweep()});
+$('speed').addEventListener('input',()=>{$('speedText').textContent=(+$('speed').value).toFixed(1)+'×'});
+$('quarter').onclick=()=>{playing=false;setAngle(90);$('play').textContent='▶ 继续播放'};
+$('half').onclick=()=>{playing=false;setAngle(180);$('play').textContent='▶ 继续播放'};
+$('full').onclick=()=>{playing=false;setAngle(360);$('play').textContent='↻ 重新播放'};
+$('reset').onclick=()=>{playing=false;setAngle(0);$('play').textContent='▶ 从 0° 开始播放'};
+$('play').onclick=()=>{
+  if(playing){playing=false;$('play').textContent='▶ 继续播放';return}
+  if(+$('angle').value>=359.5)setAngle(0);
+  playing=true;lastTime=performance.now();$('play').textContent='Ⅱ 暂停演示';
+};
+function resize(){const m=$('three'),r=m.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}
+window.addEventListener('resize',resize);new ResizeObserver(resize).observe($('three'));
+rebuildSweep();resize();
+function loop(now){
+  if(playing){
+    const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;
+    const speed=+$('speed').value;let a=+$('angle').value+90*speed*dt;
+    if(a>=360){a=360;playing=false;$('play').textContent='↻ 重新播放'}
+    $('angle').value=a;
+    if(now-lastBuild>28){rebuildSweep();lastBuild=now}
+  }else lastTime=now;
+  controls.update();renderer.render(scene,camera);requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
