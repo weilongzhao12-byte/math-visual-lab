@@ -1,10 +1,12 @@
-const CACHE='math-visual-lab-v2-4-1-r5';
+const CACHE='math-visual-lab-v2-4-1-r6';
 const CACHE_PREFIX='math-visual-lab-';
+// New self-contained folding lesson is available offline after installation.
+const FOLDING_PAGE='./solid-folding.html';
 const LOCAL=['./','./index.html','./cube-three-views.html','./water-container.html','./cross-section.html','./cube-net.html','./solid-revolution.html','./functions.html','./functions-lab.js','./quadratic.html','./unit-circle.html','./conic-sections.html','./space-vectors.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./vendor/three.min.js','./vendor/OrbitControls.js'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>
-    Promise.allSettled(LOCAL.map(url=>cache.add(new Request(url,{cache:'reload'}))))
+    Promise.allSettled([...LOCAL,FOLDING_PAGE].map(url=>cache.add(new Request(url,{cache:'reload'}))))
   ));
   self.skipWaiting();
 });

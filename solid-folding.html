@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="3D折叠教学">
+<meta name="theme-color" content="#f6f8fb">
+<title>平面图形折叠成立体图形 · 3D教学演示</title>
+<style>
+:root{
+  --bg:#f6f8fb;--panel:#ffffff;--panel2:#f9fbfd;--text:#1f2937;--muted:#667085;
+  --line:#d9e0e8;--accent:#2563eb;--accent2:#e8f0ff;--blue:#4f8edc;--orange:#e6a04b;
+  --green:#55a97b;--red:#dc6b6b;--shadow:0 10px 30px rgba(15,23,42,.08)
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"SF Pro Display","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+button,input{font:inherit}
+button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.app{max-width:1220px;margin:0 auto}
+.hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin:4px 0 14px}
+h1{font-size:clamp(22px,3vw,34px);line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
+.hero p{margin:0;color:var(--muted);font-size:14px}
+.badge{white-space:nowrap;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 11px;color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;min-height:44px;padding:9px 16px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--text);font-weight:750;cursor:pointer}
+.tab.active{border-color:var(--accent);background:var(--accent2);color:#174ea6}
+.layout{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:14px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.controls{padding:16px}
+.sectionTitle{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:0 0 9px}
+.modelTitle{font-size:21px;font-weight:850;margin:0 0 5px}
+.modelIntro{color:var(--muted);font-size:14px;margin:0 0 14px;line-height:1.65}
+.sliderRow{padding:10px 0;border-top:1px solid #eef2f6}
+.sliderHead{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:14px;margin-bottom:5px}
+.sliderHead b{font-variant-numeric:tabular-nums;color:#174ea6}
+input[type="range"]{width:100%;height:40px;accent-color:var(--accent);margin:0;touch-action:pan-x}
+.foldBox{margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px}
+.foldHead{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;font-weight:750}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{min-height:44px;border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 12px;font-weight:750;cursor:pointer;color:var(--text)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:white}
+.btn:active{transform:translateY(1px)}
+.step{margin-top:10px;border-left:3px solid var(--accent);background:#fff;border-radius:8px;padding:9px 10px;font-size:13px;line-height:1.6;color:#344054}
+.formula{margin-top:12px;border-top:1px solid #eef2f6;padding-top:12px}
+.formulaGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.metric{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:9px;min-width:0}
+.metric span{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}
+.metric strong{font-size:16px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.eq{margin-top:9px;font-size:14px;line-height:1.8;color:#344054;background:#fbfcfe;border:1px dashed var(--line);border-radius:10px;padding:10px 11px}.eq strong{color:#174ea6;font-size:15px}.eq .muted{display:inline-block;margin-top:3px;color:var(--muted);font-size:12px}
+.viewer{overflow:hidden}
+.viewerTop{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.viewerTop .hint{font-size:13px;color:var(--muted);line-height:1.45}
+.viewerTop .viewBtns{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.smallBtn{min-height:38px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;font-weight:700;cursor:pointer}
+.canvasWrap{position:relative;background:linear-gradient(180deg,#fbfdff,#f5f8fc);height:560px;height:clamp(390px,58svh,650px);min-height:390px}
+canvas{width:100%;height:100%;display:block;touch-action:none;outline:none}
+.overlay{position:absolute;left:10px;bottom:10px;display:flex;gap:7px;flex-wrap:wrap;pointer-events:none}
+.legend{display:flex;align-items:center;gap:5px;padding:5px 8px;background:rgba(255,255,255,.88);backdrop-filter:blur(5px);border:1px solid rgba(217,224,232,.9);border-radius:999px;font-size:11px;color:#475467}
+.dot{width:9px;height:9px;border-radius:50%}
+.tipbar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:#fff}
+.tip{font-size:12px;color:var(--muted);text-align:center}
+.footer{margin-top:12px;color:var(--muted);font-size:12px;line-height:1.7;text-align:center}
+.error{display:none;margin:12px 0;padding:12px;border:1px solid #efb5b5;background:#fff4f4;color:#8b2c2c;border-radius:12px}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.controls{order:2}.viewer{order:1}.canvasWrap{height:clamp(380px,52svh,560px)}.hero{align-items:flex-start}.badge{display:none}}
+@media(max-width:560px){body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}.hero{margin-top:0}.viewerTop{align-items:flex-start;flex-direction:column}.viewerTop .viewBtns{justify-content:flex-start}.formulaGrid{grid-template-columns:1fr 1fr}.tipbar{grid-template-columns:1fr}.tip{text-align:left}.canvasWrap{height:430px;min-height:350px}.controls{padding:13px}.tab{padding:8px 13px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.btn:active{transform:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <a href="./" style="display:inline-block;margin:0 0 12px;color:#2563eb;text-decoration:none;font-weight:700">← 返回数学实验室</a>
+  <div class="hero">
+    <div><h1>平面图形 → 立体图形</h1><p>可调参数 · 3D折叠/展开 · 可拖动视角 · 表面积与体积公式同步计算</p></div>
+    <div class="badge">单文件 · 无需网络 · iPad / 手机 / PC</div>
+  </div>
+  <div class="tabs" role="tablist" aria-label="选择立体图形">
+    <button class="tab active" data-model="cylinder" aria-selected="true">圆柱</button>
+    <button class="tab" data-model="cone" aria-selected="false">圆锥</button>
+    <button class="tab" data-model="box" aria-selected="false">有盖长方体</button>
+  </div>
+  <div id="errorBox" class="error"></div>
+  <div class="layout">
+    <aside class="panel controls">
+      <div class="sectionTitle">参数与计算</div>
+      <div id="modelTitle" class="modelTitle">圆柱</div>
+      <p id="modelIntro" class="modelIntro"></p>
+      <div id="paramControls"></div>
+      <div class="foldBox">
+        <div class="foldHead"><span>折叠进度</span><b id="progressText">0%</b></div>
+        <input id="foldRange" type="range" min="0" max="100" value="0" step="1" aria-label="折叠进度">
+        <div class="btns"><button id="playBtn" class="btn primary">▶ 演示折叠</button><button id="unfoldBtn" class="btn">完全展开</button><button id="foldBtn" class="btn">折叠完成</button></div>
+        <div id="stepText" class="step"></div>
+      </div>
+      <div class="formula">
+        <div class="sectionTitle">实时计算</div>
+        <div id="metrics" class="formulaGrid"></div>
+        <div id="equation" class="eq"></div>
+      </div>
+    </aside>
+    <main class="panel viewer">
+      <div class="viewerTop">
+        <div class="hint"><strong>3D视角：</strong>单指/鼠标拖动旋转；双指捏合或滚轮缩放。</div>
+        <div class="viewBtns"><button id="resetView" class="smallBtn">↺ 复位视角</button><button id="frontView" class="smallBtn">正视展开图</button></div>
+      </div>
+      <div class="canvasWrap" id="canvasWrap">
+        <canvas id="scene" aria-label="可交互的三维折叠模型" tabindex="0"></canvas>
+        <div id="legend" class="overlay"></div>
+      </div>
+      <div class="tipbar"><div class="tip">拖动“折叠进度”可逐帧观察</div><div class="tip">调整尺寸，公式与模型同时更新</div><div class="tip">任意阶段都能旋转3D视角</div></div>
+    </main>
+  </div>
+  <div class="footer">说明：模型按几何关系实时生成。圆柱和圆锥的曲面采用分片近似显示；面积与体积计算使用连续几何的精确公式。</div>
+</div>
+<script>
+(function(){'use strict';
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const canvas=$('#scene'), ctx=canvas.getContext('2d',{alpha:false});
+if(!ctx){$('#errorBox').style.display='block';$('#errorBox').textContent='当前浏览器无法使用 Canvas 2D，请升级 Safari、Chrome 或 Edge。';return;}
+const COLORS={blue:[79,142,220],orange:[230,160,75],green:[85,169,123],red:[220,107,107],gray:[154,164,178],purple:[142,110,200]};
+const models={
+ cylinder:{title:'圆柱',intro:'长方形卷成侧面，两个圆移动到上下两端成为底面。长方形的“绕一圈”方向长度就是底面周长 2πr。',params:{r:3,h:6}},
+ cone:{title:'圆锥',intro:'扇形的两条半径合拢，弧长正好围成底面圆周；另一个圆成为底面。扇形半径就是圆锥母线。',params:{r:3,h:6}},
+ box:{title:'有盖长方体',intro:'从一张长方形直板中截去若干矩形，保留底面、四个侧面和盒盖。先立起四壁，再把盒盖合上。',params:{L:8,W:6,H:2}}
+};
+const paramDefs={
+ cylinder:[['r','底面半径 r',1,5,.1,'cm'],['h','高 h',2,10,.1,'cm']],
+ cone:[['r','底面半径 r',1,5,.1,'cm'],['h','高 h',2,10,.1,'cm']],
+ box:[['L','盒底长 L',4,12,.1,'cm'],['W','盒底宽 W',3,10,.1,'cm'],['H','盒高 H',1,4,.1,'cm']]
+};
+let current='cylinder', progress=0, playing=false, animId=0, lastTime=0;
+let view={yaw:-.62,pitch:.34,zoom:1};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=t=>t*t*(3-2*t);
+const mix=(a,b,t)=>a+(b-a)*t;
+const mixP=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t),mix(a[2],b[2],t)];
+const fmt=n=>{if(!isFinite(n))return '—';const a=Math.abs(n);return (a>=100? n.toFixed(1):a>=10?n.toFixed(2):n.toFixed(2)).replace(/\.00$/,'').replace(/(\.\d)0$/,'$1');};
+function rgba(c,a,shade=1){return `rgba(${Math.round(c[0]*shade)},${Math.round(c[1]*shade)},${Math.round(c[2]*shade)},${a})`;}
+function addPoly(arr,pts,color,alpha=.72,stroke=.82){arr.push({pts,color,alpha,stroke});}
+function addParamSurface(arr,nu,nv,fn,color,alpha=.72){for(let i=0;i<nu;i++){for(let j=0;j<nv;j++){const u0=i/nu,u1=(i+1)/nu,v0=j/nv,v1=(j+1)/nv;addPoly(arr,[fn(u0,v0),fn(u1,v0),fn(u1,v1),fn(u0,v1)],color,alpha);}}}
+function addDisk(arr,nang,nrad,fn,color,alpha=.78){for(let j=0;j<nrad;j++){const v0=j/nrad,v1=(j+1)/nrad;for(let i=0;i<nang;i++){const u0=i/nang,u1=(i+1)/nang;if(j===0){addPoly(arr,[fn(0,0),fn(u1,v1),fn(u0,v1)],color,alpha);}else addPoly(arr,[fn(u0,v0),fn(u1,v0),fn(u1,v1),fn(u0,v1)],color,alpha);}}}
+function scaleScene(scene,s,off=[0,0,0]){scene.polys.forEach(poly=>poly.pts=poly.pts.map(p=>[(p[0]+off[0])*s,(p[1]+off[1])*s,(p[2]+off[2])*s]));scene.labels.forEach(l=>l.p=[(l.p[0]+off[0])*s,(l.p[1]+off[1])*s,(l.p[2]+off[2])*s]);return scene;}
+function cylinderScene(p,t){const {r,h}=p,C=2*Math.PI*r;const polys=[],labels=[];const sideT=ease(clamp(t/.72,0,1)),capT=ease(clamp((t-.32)/.68,0,1));
+ addParamSurface(polys,34,9,(u,v)=>{const s=(u-.5)*C,y=(v-.5)*h;if(sideT<.0005)return[s,y,0];const Rb=C/(2*Math.PI*sideT),th=s/Rb;return[Rb*Math.sin(th),y,Rb*(Math.cos(th)-1)+sideT*r];},COLORS.blue,.72);
+ const diskPoint=(top,u,v)=>{const ph=u*2*Math.PI,rr=v*r;const flat=[rr*Math.cos(ph),(top?1:-1)*(h/2+r)+rr*Math.sin(ph),0];const fin=[rr*Math.cos(ph),(top?1:-1)*h/2,rr*Math.sin(ph)];return mixP(flat,fin,capT);};
+ addDisk(polys,34,4,(u,v)=>diskPoint(true,u,v),COLORS.orange,.8);addDisk(polys,34,4,(u,v)=>diskPoint(false,u,v),COLORS.orange,.8);
+ labels.push({p:[0,h/2+r*1.15,0],text:`圆：r=${fmt(r)}`},{p:[0,0,sideT*r+0.15],text:`h=${fmt(h)}`},{p:[0,-h/2-r*1.15,0],text:`长方形宽=2πr=${fmt(C)}`});
+ return scaleScene({polys,labels,extent:34},7.2/34);}
+function coneScene(p,t){const {r,h}=p,l=Math.hypot(r,h),alpha=2*Math.PI*r/l;const polys=[],labels=[];const sideT=ease(clamp(t/.74,0,1)),capT=ease(clamp((t-.38)/.62,0,1));
+ addParamSurface(polys,36,10,(u,v)=>{const beta=-alpha/2+u*alpha,rho=v*l;const flat=[rho*Math.sin(beta),-l/2+rho*Math.cos(beta),0];const th=(u-.5)*2*Math.PI;const fin=[v*r*Math.sin(th),h/2-v*h,v*r*Math.cos(th)];return mixP(flat,fin,sideT);},COLORS.blue,.74);
+ addDisk(polys,36,4,(u,v)=>{const ph=u*2*Math.PI,rr=v*r;const flat=[rr*Math.cos(ph),l/2+r+rr*Math.sin(ph),0];const fin=[rr*Math.cos(ph),-h/2,rr*Math.sin(ph)];return mixP(flat,fin,capT);},COLORS.orange,.82);
+ labels.push({p:[0,-l/2-.35,0],text:`扇形半径 l=${fmt(l)}`},{p:[0,l/2+r*1.15,0],text:`底面 r=${fmt(r)}`},{p:[0,0,0],text:`扇形圆心角=${fmt(alpha*180/Math.PI)}°`});
+ return scaleScene({polys,labels,extent:27.5},7.2/27.5);}
+function boxScene(p,t){const {L,W,H}=p,polys=[],labels=[];const a=ease(clamp(t/.64,0,1))*Math.PI/2,b=ease(clamp((t-.64)/.36,0,1))*Math.PI/2,shift=(1-t)*L/2;
+ const q=(pts,color,alpha=.8)=>addPoly(polys,pts.map(v=>[v[0]-shift,v[1],v[2]]),color,alpha);
+ q([[-L/2,0,-W/2],[L/2,0,-W/2],[L/2,0,W/2],[-L/2,0,W/2]],COLORS.blue,.82);
+ q([[-L/2,0,-W/2],[-L/2,0,W/2],[-L/2-H*Math.cos(a),H*Math.sin(a),W/2],[-L/2-H*Math.cos(a),H*Math.sin(a),-W/2]],COLORS.orange,.78);
+ q([[L/2,0,-W/2],[L/2,0,W/2],[L/2+H*Math.cos(a),H*Math.sin(a),W/2],[L/2+H*Math.cos(a),H*Math.sin(a),-W/2]],COLORS.orange,.78);
+ q([[-L/2,0,-W/2],[L/2,0,-W/2],[L/2,H*Math.sin(a),-W/2-H*Math.cos(a)],[-L/2,H*Math.sin(a),-W/2-H*Math.cos(a)]],COLORS.orange,.78);
+ q([[-L/2,0,W/2],[L/2,0,W/2],[L/2,H*Math.sin(a),W/2+H*Math.cos(a)],[-L/2,H*Math.sin(a),W/2+H*Math.cos(a)]],COLORS.orange,.78);
+ const hx=L/2+H*Math.cos(a),hy=H*Math.sin(a),d=[Math.cos(a+b),Math.sin(a+b)];
+ q([[hx,hy,-W/2],[hx,hy,W/2],[hx+L*d[0],hy+L*d[1],W/2],[hx+L*d[0],hy+L*d[1],-W/2]],COLORS.green,.80);
+ const fade=clamp(1-t/.18,0,1)*.32;if(fade>0){const x0=-L/2-H,x1=-L/2,x2=L/2,x3=L/2+H,x4=L/2+H+L,z0=-W/2-H,z1=-W/2,z2=W/2,z3=W/2+H;[[x0,x1,z0,z1],[x2,x3,z0,z1],[x3,x4,z0,z1],[x0,x1,z2,z3],[x2,x3,z2,z3],[x3,x4,z2,z3]].forEach(c=>q([[c[0],-.03,c[2]],[c[1],-.03,c[2]],[c[1],-.03,c[3]],[c[0],-.03,c[3]]],COLORS.red,fade));}
+ labels.push({p:[-shift,0.05,0],text:`底面 ${fmt(L)}×${fmt(W)}`},{p:[L/2+H*Math.cos(a)-shift,H*Math.sin(a)+.18,0],text:`H=${fmt(H)}`},{p:[hx+L*d[0]*.55-shift,hy+L*d[1]*.55,W/2+.25],text:'盒盖'});
+ const extent=33;return scaleScene({polys,labels,extent},7.2/extent);}
+function buildScene(){const p=models[current].params;if(current==='cylinder')return cylinderScene(p,progress);if(current==='cone')return coneScene(p,progress);return boxScene(p,progress);}
+function rotatePoint(p){const cy=Math.cos(view.yaw),sy=Math.sin(view.yaw),cp=Math.cos(view.pitch),sp=Math.sin(view.pitch);const x1=cy*p[0]+sy*p[2],z1=-sy*p[0]+cy*p[2];const y2=cp*p[1]-sp*z1,z2=sp*p[1]+cp*z1;return[x1,y2,z2];}
+function projectRot(r,w,h){const base=Math.min(w,h)/8.8,cam=11.5,per=cam/(cam-r[2]);return{x:w/2+r[0]*base*view.zoom*per,y:h/2-r[1]*base*view.zoom*per,z:r[2],per};}
+function normalOf(a,b,c){const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];const n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],m=Math.hypot(...n)||1;return[n[0]/m,n[1]/m,n[2]/m];}
+let raf=0;function requestRender(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;draw();});}
+function resizeCanvas(){const rect=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);const W=Math.max(1,Math.round(rect.width*dpr)),H=Math.max(1,Math.round(rect.height*dpr));if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H;}ctx.setTransform(dpr,0,0,dpr,0,0);return{w:rect.width,h:rect.height};}
+function draw(){const {w,h}=resizeCanvas();ctx.clearRect(0,0,w,h);ctx.fillStyle='#f7f9fc';ctx.fillRect(0,0,w,h);const scene=buildScene();const faces=scene.polys.map(poly=>{const rp=poly.pts.map(rotatePoint),pp=rp.map(p=>projectRot(p,w,h)),z=rp.reduce((s,p)=>s+p[2],0)/rp.length;return{poly,rp,pp,z};}).sort((a,b)=>a.z-b.z);
+ const light=[.25,.55,.8];for(const f of faces){if(f.pp.some(p=>!isFinite(p.x)||!isFinite(p.y)))continue;let shade=.88;if(f.rp.length>=3){const n=normalOf(f.rp[0],f.rp[1],f.rp[2]);shade=clamp(.72+.28*Math.abs(n[0]*light[0]+n[1]*light[1]+n[2]*light[2]),.65,1);}ctx.beginPath();ctx.moveTo(f.pp[0].x,f.pp[0].y);for(let i=1;i<f.pp.length;i++)ctx.lineTo(f.pp[i].x,f.pp[i].y);ctx.closePath();ctx.fillStyle=rgba(f.poly.color,f.poly.alpha,shade);ctx.fill();ctx.strokeStyle=`rgba(48,61,78,${f.poly.stroke})`;ctx.lineWidth=1;ctx.stroke();}
+ scene.labels.forEach(l=>{const q=projectRot(rotatePoint(l.p),w,h);drawLabel(q.x,q.y,l.text,w,h);});}
+function drawLabel(x,y,text,w,h){ctx.font='600 12px system-ui,-apple-system,"PingFang SC",sans-serif';const pad=6,tw=ctx.measureText(text).width,bw=tw+pad*2,bh=24;x=clamp(x-bw/2,4,w-bw-4);y=clamp(y-bh/2,4,h-bh-4);ctx.fillStyle='rgba(255,255,255,.9)';ctx.strokeStyle='rgba(205,214,224,.95)';ctx.lineWidth=1;roundRect(ctx,x,y,bw,bh,7);ctx.fill();ctx.stroke();ctx.fillStyle='#344054';ctx.textBaseline='middle';ctx.fillText(text,x+pad,y+bh/2+.5);}
+function roundRect(c,x,y,w,h,r){const rr=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+rr,y);c.arcTo(x+w,y,x+w,y+h,rr);c.arcTo(x+w,y+h,x,y+h,rr);c.arcTo(x,y+h,x,y,rr);c.arcTo(x,y,x+w,y,rr);c.closePath();}
+function renderParams(){const defs=paramDefs[current],p=models[current].params;$('#paramControls').innerHTML=defs.map(d=>{let [key,label,min,max,step,unit]=d;const val=clamp(p[key],min,max);p[key]=val;return `<div class="sliderRow"><div class="sliderHead"><span>${label}</span><b id="val-${key}">${fmt(val)} ${unit}</b></div><input class="paramRange" data-key="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${val}" aria-label="${label}"></div>`;}).join('');$$('.paramRange').forEach(el=>el.addEventListener('input',()=>{const k=el.dataset.key;models[current].params[k]=+el.value;const lab=$(`#val-${k}`);if(lab)lab.textContent=fmt(models[current].params[k])+' cm';updateText();requestRender();}));}
+function metric(label,value){return `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`;}
+function updateText(){const p=models[current].params;$('#modelTitle').textContent=models[current].title;$('#modelIntro').textContent=models[current].intro;$('#progressText').textContent=Math.round(progress*100)+'%';$('#foldRange').value=Math.round(progress*100);let m='',eq='',step='';
+ if(current==='cylinder'){const C=2*Math.PI*p.r,Sb=Math.PI*p.r*p.r,Ss=C*p.h,S=Ss+2*Sb,V=Sb*p.h;m=metric('底面积 πr²',fmt(Sb)+' cm²')+metric('侧面积 2πrh',fmt(Ss)+' cm²')+metric('总表面积 S',fmt(S)+' cm²')+metric('体积 V',fmt(V)+' cm³');eq=`<strong>圆柱表面积：</strong>S = 2πr² + 2πrh = 2πr(r+h)<br><strong>圆柱体积：</strong>V = πr²h<br><span class="muted">代入 r=${fmt(p.r)}，h=${fmt(p.h)}：S=${fmt(S)} cm²，V=${fmt(V)} cm³；侧面展开长方形为 ${fmt(C)} × ${fmt(p.h)} cm。</span>`;step=progress<.02?'完全展开：长方形 + 两个圆。调节 r 时，两个圆的尺寸和长方形长度 2πr 会同步变化。':progress<.55?'长方形沿“2πr”方向逐渐卷曲，形成圆柱侧面。':progress<.96?'侧面继续闭合，两个圆移动到上、下两端。':'折叠完成：长方形成为侧面，两个圆成为上下底。';}
+ if(current==='cone'){const l=Math.hypot(p.r,p.h),ang=360*p.r/l,Sb=Math.PI*p.r*p.r,Sl=Math.PI*p.r*l,S=Sl+Sb,V=Sb*p.h/3;m=metric('母线 l',fmt(l)+' cm')+metric('底面积 πr²',fmt(Sb)+' cm²')+metric('总表面积 S',fmt(S)+' cm²')+metric('体积 V',fmt(V)+' cm³');eq=`<strong>圆锥表面积：</strong>S = πr² + πrl = πr(r+l)，其中 l = √(r²+h²)<br><strong>圆锥体积：</strong>V = ⅓πr²h<br><span class="muted">当前 l=${fmt(l)} cm，扇形圆心角=${fmt(ang)}°；代入后 S=${fmt(S)} cm²，V=${fmt(V)} cm³。</span>`;step=progress<.02?'完全展开：一个扇形 + 一个圆。':progress<.58?'扇形的两条半径逐渐靠拢，弧边开始围成底面圆周。':progress<.96?'侧面接近闭合，底面圆移动到圆锥底部。':'折叠完成：扇形成为圆锥侧面，圆成为底面。';}
+ if(current==='box'){const sheetL=2*p.L+2*p.H,sheetW=p.W+2*p.H,As=sheetL*sheetW,Acut=4*p.H*p.H+2*p.L*p.H,A=2*(p.L*p.W+p.L*p.H+p.W*p.H),V=p.L*p.W*p.H;m=metric('原直板面积',fmt(As)+' cm²')+metric('截去面积',fmt(Acut)+' cm²')+metric('盒子总表面积 S',fmt(A)+' cm²')+metric('体积 V',fmt(V)+' cm³');eq=`<strong>长方体表面积：</strong>S = 2(LW + LH + WH)<br><strong>长方体体积：</strong>V = LWH<br><span class="muted">当前 L=${fmt(p.L)}，W=${fmt(p.W)}，H=${fmt(p.H)}：S=${fmt(A)} cm²，V=${fmt(V)} cm³。原直板 ${fmt(sheetL)}×${fmt(sheetW)} cm，面积 ${fmt(As)} cm²；截去 ${fmt(Acut)} cm² 后，保留面积正好等于盒子总表面积。</span>`;step=progress<.02?'完全展开：红色区域表示从长方形直板中截去的矩形。':progress<.62?'先沿底面四条边折起四个侧面，高度都是 H。':progress<.98?'四壁已基本竖直，盒盖绕右侧铰边继续向内合拢。':'折叠完成：六个保留面恰好组成一个有盖长方体。';}
+ $('#metrics').innerHTML=m;$('#equation').innerHTML=eq;$('#stepText').textContent=step;updateLegend();}
+function updateLegend(){let items=[];if(current==='cylinder')items=[['blue','长方形/侧面'],['orange','两个圆/底面']];if(current==='cone')items=[['blue','扇形/侧面'],['orange','圆/底面']];if(current==='box')items=[['blue','底面'],['orange','四侧面'],['green','盒盖'],['red','截去部分']];$('#legend').innerHTML=items.map(([k,t])=>`<div class="legend"><span class="dot" style="background:rgb(${COLORS[k].join(',')})"></span>${t}</div>`).join('');}
+function switchModel(name){current=name;progress=0;playing=false;cancelAnimationFrame(animId);$$('.tab').forEach(b=>{const on=b.dataset.model===name;b.classList.toggle('active',on);b.setAttribute('aria-selected',String(on));});renderParams();resetViewForModel();updateText();requestRender();}
+$$('.tab').forEach(b=>b.addEventListener('click',()=>switchModel(b.dataset.model)));
+$('#foldRange').addEventListener('input',e=>{playing=false;cancelAnimationFrame(animId);progress=+e.target.value/100;$('#playBtn').textContent='▶ 演示折叠';updateText();requestRender();});
+function play(){if(playing){playing=false;cancelAnimationFrame(animId);$('#playBtn').textContent='▶ 继续折叠';return;}if(progress>=.999)progress=0;playing=true;$('#playBtn').textContent='Ⅱ 暂停';lastTime=performance.now();function tick(now){if(!playing)return;const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;progress=Math.min(1,progress+dt/3.25);updateText();draw();if(progress>=1){playing=false;$('#playBtn').textContent='↻ 再演示一次';return;}animId=requestAnimationFrame(tick);}animId=requestAnimationFrame(tick);}
+$('#playBtn').addEventListener('click',play);$('#unfoldBtn').addEventListener('click',()=>{playing=false;cancelAnimationFrame(animId);progress=0;$('#playBtn').textContent='▶ 演示折叠';updateText();requestRender();});$('#foldBtn').addEventListener('click',()=>{playing=false;cancelAnimationFrame(animId);progress=1;$('#playBtn').textContent='↻ 再演示一次';updateText();requestRender();});
+function resetViewForModel(){view.zoom=1;view.yaw=-.62;view.pitch=current==='box'?.48:.24;}
+$('#resetView').addEventListener('click',()=>{resetViewForModel();requestRender();});$('#frontView').addEventListener('click',()=>{view.yaw=0;view.pitch=current==='box'?1.48:0;view.zoom=1;requestRender();});
+const pointers=new Map();let lastSingle=null,lastPinch=0;
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1)lastSingle={x:e.clientX,y:e.clientY};if(pointers.size===2){const a=[...pointers.values()];lastPinch=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);}e.preventDefault();});
+canvas.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1&&lastSingle){const dx=e.clientX-lastSingle.x,dy=e.clientY-lastSingle.y;view.yaw+=dx*.009;view.pitch=clamp(view.pitch+dy*.009,-1.25,1.25);lastSingle={x:e.clientX,y:e.clientY};requestRender();}else if(pointers.size===2){const a=[...pointers.values()],d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(lastPinch>0)view.zoom=clamp(view.zoom*d/lastPinch,.55,2.4);lastPinch=d;requestRender();}e.preventDefault();});
+function endPointer(e){pointers.delete(e.pointerId);if(pointers.size===1){const a=[...pointers.values()][0];lastSingle={x:a.x,y:a.y};}else lastSingle=null;if(pointers.size<2)lastPinch=0;}
+canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('wheel',e=>{view.zoom=clamp(view.zoom*Math.exp(-e.deltaY*.001),.55,2.4);requestRender();e.preventDefault();},{passive:false});
+canvas.addEventListener('dblclick',()=>{resetViewForModel();requestRender();});
+if(!window.PointerEvent){let lastTouch=null,lastTouchDist=0;canvas.addEventListener('touchstart',e=>{if(e.touches.length===1)lastTouch={x:e.touches[0].clientX,y:e.touches[0].clientY};else if(e.touches.length===2)lastTouchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);e.preventDefault();},{passive:false});canvas.addEventListener('touchmove',e=>{if(e.touches.length===1&&lastTouch){const t=e.touches[0],dx=t.clientX-lastTouch.x,dy=t.clientY-lastTouch.y;view.yaw+=dx*.009;view.pitch=clamp(view.pitch+dy*.009,-1.25,1.48);lastTouch={x:t.clientX,y:t.clientY};requestRender();}else if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(lastTouchDist>0)view.zoom=clamp(view.zoom*d/lastTouchDist,.55,2.4);lastTouchDist=d;requestRender();}e.preventDefault();},{passive:false});canvas.addEventListener('touchend',()=>{lastTouch=null;lastTouchDist=0;},{passive:true});}
+if('ResizeObserver'in window)new ResizeObserver(requestRender).observe($('#canvasWrap'));else window.addEventListener('resize',requestRender);
+renderParams();resetViewForModel();updateText();requestRender();
+})();
+</script>
+</body>
+</html>
