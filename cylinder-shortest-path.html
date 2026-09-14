@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>玻璃杯内外壁最短路径 · 将军饮马 · 局部展开 3D交互演示</title>
+<style>
+:root{
+  --bg:#f5f7fb;--panel:#fff;--text:#172033;--muted:#667085;--accent:#2f6fed;--accent2:#eaf1ff;
+  --good:#0f9f6e;--good2:#e8f7f1;--red:#e5484d;--orange:#ef8a17;--purple:#7b61d1;--line:#d9e0ea;--soft:#f8fafc;
+  --shadow:0 10px 28px rgba(16,24,40,.08)
+}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif}
+body{padding:16px}.app{max-width:1240px;margin:auto}.hero{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;flex-wrap:wrap;margin:6px 0 14px}
+h1{font-size:clamp(24px,4vw,38px);margin:0 0 6px}.sub{font-size:14px;color:var(--muted);line-height:1.7;max-width:900px}.badge{background:var(--accent2);color:#1f56c9;padding:8px 12px;border-radius:999px;font-weight:800;font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.88fr);gap:14px}.panel{background:var(--panel);border:1px solid #e6e9ef;border-radius:18px;box-shadow:var(--shadow);padding:14px;min-width:0}
+.canvasWrap{position:relative;border:1px solid #e4e8ef;border-radius:14px;overflow:hidden;background:linear-gradient(#fcfdff,#f2f7fb);touch-action:none;min-height:360px}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;min-height:360px}.overlay{position:absolute;left:10px;top:10px;right:10px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}.pill{background:rgba(255,255,255,.94);border:1px solid #e2e7ef;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:760;backdrop-filter:blur(4px)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:0}.controls{display:grid;gap:12px}.section{border-top:1px solid #edf0f4;padding-top:12px}.section:first-child{border-top:0;padding-top:0}.section h2{font-size:16px;margin:0 0 9px}
+.row{display:grid;grid-template-columns:1fr 92px;gap:10px;align-items:center;margin:8px 0}.row label{font-size:13px;color:#475467}.row input[type=range]{width:100%;accent-color:var(--accent)}input[type=number]{width:100%;min-height:42px;border:1px solid #d7dde7;border-radius:10px;background:white;padding:8px 10px;font-size:16px;color:var(--text)}
+.heightRow{display:grid;grid-template-columns:112px minmax(0,1fr) 76px;gap:8px;align-items:center;margin:9px 0}.heightRow label{font-size:13px;color:#475467}.heightRow input[type=range]{width:100%;accent-color:var(--accent)}.heightRead{font-weight:800;text-align:center;background:#f8fafc;border:1px solid #e3e8ef;border-radius:9px;padding:7px 5px;font-size:13px}.smallInfo{font-size:12px;color:var(--muted);line-height:1.55;margin:-2px 0 7px 112px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}.btn{min-height:44px;border:0;border-radius:12px;padding:10px 13px;font-size:14px;font-weight:800;cursor:pointer;background:#eef2f7;color:#253047}.btn.primary{background:var(--accent);color:white}.btn.good{background:var(--good2);color:#087653}.btn.warn{background:#fff4e5;color:#9a5b00}.btn.active{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent2);color:#1f56c9}.btn:focus-visible,input:focus-visible{outline:3px solid rgba(47,111,237,.22);outline-offset:2px}.btn:disabled{opacity:.5;cursor:not-allowed}
+.targetBar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.targetBtn{min-height:48px;border:1px solid #dbe1ea;border-radius:12px;background:#fff;padding:8px 10px;text-align:left;cursor:pointer;font-size:13px}.targetBtn b{display:block;font-size:14px;margin-bottom:2px}.targetBtn.active{border-color:#7aa2f7;background:#f3f7ff;box-shadow:0 0 0 2px rgba(47,111,237,.12)}.targetBtn[data-target="A"] b{color:#1f56c9}.targetBtn[data-target="B"] b{color:#c8383e}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.preset{min-height:40px;border:1px solid #e1e6ee;background:#fff;border-radius:10px;padding:7px 8px;font-size:12px;font-weight:750;color:#344054;cursor:pointer}.preset:hover{background:#f8fafc}
+.switchRow{display:grid;grid-template-columns:1fr 1fr;gap:7px}.reflectBtn{min-height:44px;border:1px solid #dde3ec;border-radius:11px;background:#fff;font-size:13px;font-weight:800;cursor:pointer;color:#344054}.reflectBtn.active{border-color:#9b8ae3;background:#f5f2ff;color:#5f49b8;box-shadow:0 0 0 2px rgba(123,97,209,.12)}
+.result{background:var(--soft);border:1px solid #e6ebf2;border-radius:14px;padding:12px;line-height:1.7;font-size:14px}.result strong{font-size:20px;color:#087653}.formula{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#fff;border:1px dashed #d9dfe8;border-radius:10px;padding:9px;margin-top:8px;overflow-wrap:anywhere}.note{font-size:12px;color:var(--muted);line-height:1.6}.tip{color:#7a4c00;background:#fff8e8;border:1px solid #f2dfb7;padding:9px 10px;border-radius:10px;margin-top:8px;font-size:12px;line-height:1.55}
+.solvePanel{margin-top:14px}.solveGrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:14px;align-items:stretch}.schematicWrap{background:#fbfcfe;border:1px solid #e7ebf1;border-radius:14px;padding:10px;min-width:0}.schematicWrap svg{display:block;width:100%;height:auto;min-height:310px}.steps{margin:0;padding-left:22px;color:#344054;line-height:1.85;font-size:14px}.steps li+li{margin-top:5px}.key{background:#eef7ff;border-left:4px solid var(--accent);padding:10px 12px;border-radius:10px;line-height:1.7;font-size:14px;margin-top:10px}.equation{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;line-height:1.8;background:#101828;color:#fff;border-radius:12px;padding:12px;overflow-wrap:anywhere;margin-top:10px}
+.footer{margin-top:14px;background:#101828;color:white;border-radius:15px;padding:13px 15px;line-height:1.7;font-size:13px}
+@media(max-width:900px){body{padding:10px}.grid,.solveGrid{grid-template-columns:1fr}.panel{padding:11px}.controls{grid-template-columns:1fr 1fr;gap:10px}.controls .section{border-top:0;border:1px solid #edf0f4;border-radius:13px;padding:10px}.controls .section:last-child{grid-column:1/-1}.smallInfo{margin-left:0}}
+@media(max-width:640px){.controls{grid-template-columns:1fr}.controls .section:last-child{grid-column:auto}.row{grid-template-columns:1fr 86px}.heightRow{grid-template-columns:92px minmax(0,1fr) 68px}.canvasWrap,canvas{min-height:310px}.presets{grid-template-columns:1fr}.solveGrid{grid-template-columns:1fr}.schematicWrap svg{min-height:260px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<nav style="padding:10px 16px;font:600 14px system-ui"><a href="./" style="color:#2563eb;background:transparent;padding:0;margin:0;text-decoration:none">← 返回数学实验室</a> <span style="color:#94a3b8"> | </span> <a href="./shortest-paths.html" style="color:#2563eb;text-decoration:none">最短距离目录</a></nav>
+<div class="app">
+  <div class="hero">
+    <div>
+      <h1>玻璃杯：外壁 A 到内壁 B 的最短路径</h1>
+      <div class="sub">忽略杯壁厚度。A、B 的高度可单独调节；圆周位置在 3D 杯壁上直接点击选择。展开时只保留 A、B 所在两条母线之间的局部曲面，再用 A′ 或 B′ 的“将军饮马”反射法求最短路径，同时始终保留原来的 A、B 两点。</div>
+    </div>
+    <div class="badge">薄壁玻璃杯 · 局部正视展开 · A′/B′反射 · 参数实时更新</div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="canvasWrap" id="wrap">
+        <canvas id="cv" width="1000" height="625" aria-label="玻璃杯局部展开与将军饮马最短路径三维演示"></canvas>
+        <div class="overlay"><span class="pill" id="modePill">3D 玻璃杯</span><span class="pill" id="stagePill">点击候选点选择 A 的圆周位置</span></div>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#2f6fed"></i>A：原点</span>
+        <span><i class="dot" style="background:#e5484d"></i>B：原点</span>
+        <span><i class="dot" style="background:#7b61d1"></i>A′ / B′：反射点</span>
+        <span><i class="dot" style="background:#0f9f6e"></i>A—P—B：杯面原路径</span>
+      </div>
+      <div class="note" style="margin-top:8px">展开完成后自动转为局部侧面的正视图，并按真实横纵比例等比例缩放；A、B、P 与反射点会保持清晰分离。</div>
+    </div>
+
+    <div class="panel controls">
+      <div class="section">
+        <h2>① 玻璃杯尺寸</h2>
+        <div class="row"><label>半径 R</label><input id="R" type="number" min="1" max="15" step="0.5" value="4"></div>
+        <div class="row"><label>杯高 H</label><input id="H" type="number" min="2" max="30" step="0.5" value="8"></div>
+        <div class="note">上边缘视为“杯口”，下边缘视为“杯底”。杯壁厚度忽略不计。</div>
+      </div>
+
+      <div class="section">
+        <h2>② A、B 距杯底 / 杯口的距离</h2>
+        <div class="heightRow"><label>A 距杯底</label><input id="zA" type="range" min="0" max="8" step="0.1" value="2"><div class="heightRead" id="zARead">2</div></div>
+        <div class="smallInfo" id="aHeightInfo">A 距杯口 = 6</div>
+        <div class="heightRow"><label>B 距杯底</label><input id="zB" type="range" min="0" max="8" step="0.1" value="4.5"><div class="heightRead" id="zBRead">4.5</div></div>
+        <div class="smallInfo" id="bHeightInfo">B 距杯口 = 3.5</div>
+        <div class="note">拖动滑块即可改变题目中常见的“点到上下底面（杯底/杯口）的距离”。两者之和恒等于杯高 H。</div>
+      </div>
+
+      <div class="section">
+        <h2>③ 点击 3D 杯壁选择圆周位置</h2>
+        <div class="targetBar">
+          <button class="targetBtn active" data-target="A" type="button"><b>选 A 的圆周位置</b><span id="aInfo">前侧</span></button>
+          <button class="targetBtn" data-target="B" type="button"><b>选 B 的圆周位置</b><span id="bInfo">后侧</span></button>
+        </div>
+        <div class="note" style="margin-top:8px">灰色圆点位于当前所选点的高度上，分别对应前 / 右 / 后 / 左四条典型母线。点击圆点即可选取；拖动空白处仍可旋转视角。</div>
+        <div class="presets">
+          <button class="preset" data-preset="same" type="button">同母线</button>
+          <button class="preset" data-preset="quarter" type="button">相隔 1/4 周</button>
+          <button class="preset" data-preset="opposite" type="button">相隔半周</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>④ 选择“将军饮马”反射方式</h2>
+        <div class="switchRow">
+          <button class="reflectBtn active" data-reflect="B" type="button">保留 A、B，作 B′</button>
+          <button class="reflectBtn" data-reflect="A" type="button">保留 A、B，作 A′</button>
+        </div>
+        <div class="note" id="reflectNote" style="margin-top:7px">把 B 关于杯口直线反射成 B′，连接 AB′。</div>
+      </div>
+
+      <div class="section">
+        <h2>⑤ 求解与局部展开</h2>
+        <div class="btns"><button class="btn primary" id="solve" type="button">求最短路径</button><button class="btn good" id="animate" type="button">▶ 分步展开</button><button class="btn" id="fold" type="button">↶ 返回 3D</button></div>
+        <div class="row"><label>手动展开进度</label><input id="progress" type="range" min="0" max="1" step="0.001" value="0"></div>
+        <div class="tip">动画：① 高亮 A、B 之间的最短圆周扇形；② 其余杯壁淡出，只把这块局部曲面摊平；③ 原 A、B 保留，再把选定点关于杯口反射成 A′ 或 B′；④ 直线与杯口交于 P。</div>
+      </div>
+
+      <div class="section">
+        <h2>⑥ 3D 视角</h2>
+        <div class="row"><label>左右旋转</label><input id="yaw" type="range" min="-180" max="180" step="1" value="32"></div>
+        <div class="row"><label>上下旋转</label><input id="pitch" type="range" min="-65" max="55" step="1" value="-17"></div>
+        <div class="row"><label>缩放</label><input id="zoom" type="range" min="0.72" max="1.65" step="0.01" value="1"></div>
+        <div class="btns"><button class="btn" id="resetView" type="button">重置视角</button></div>
+      </div>
+
+      <div class="section">
+        <h2>计算结果</h2>
+        <div class="result" id="result"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel solvePanel">
+    <div class="solveGrid">
+      <div class="schematicWrap">
+        <div style="font-weight:800;margin:2px 4px 8px">局部展开 + “将军饮马”示意图</div>
+        <svg id="schematic" viewBox="0 0 760 410" role="img" aria-label="保留A和B并使用A撇或B撇反射求最短路径示意图"></svg>
+      </div>
+      <div>
+        <h2 style="font-size:18px;margin:2px 0 10px">求解过程</h2>
+        <ol class="steps" id="steps"></ol>
+        <div class="key" id="keyText"></div>
+        <div class="equation" id="equation"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer"><b>课堂提示：</b>这版只展开 A、B 两条母线之间的局部侧面，不再展示整圈矩形；展开完成后会自动转成正视图，避免侧面被压扁。先让学生观察原来的折线 A—P—B，再选择“作 B′”或“作 A′”。反射后折线被拉直成一条线，因此最短距离可直接用勾股定理求出。</div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const cv=$('#cv'),ctx=cv.getContext('2d');
+const E={R:$('#R'),H:$('#H'),zA:$('#zA'),zB:$('#zB'),zARead:$('#zARead'),zBRead:$('#zBRead'),aHeightInfo:$('#aHeightInfo'),bHeightInfo:$('#bHeightInfo'),solve:$('#solve'),animate:$('#animate'),fold:$('#fold'),progress:$('#progress'),yaw:$('#yaw'),pitch:$('#pitch'),zoom:$('#zoom'),resetView:$('#resetView'),result:$('#result'),modePill:$('#modePill'),stagePill:$('#stagePill'),aInfo:$('#aInfo'),bInfo:$('#bInfo'),schematic:$('#schematic'),steps:$('#steps'),equation:$('#equation'),keyText:$('#keyText'),wrap:$('#wrap'),reflectNote:$('#reflectNote')};
+const TAU=Math.PI*2;
+let yaw=32*Math.PI/180,pitch=-17*Math.PI/180,zoom=1,unfold=0,anim=null,drag=null,hoverId=null,hitPoints=[],target='A',solution=null,flatYaw=yaw,lastW=0,lastH=0,reflectWhich='B';
+const selection={A:{angIndex:0},B:{angIndex:2}};
+const angleDefs=[{ang:0,name:'前侧'},{ang:Math.PI/2,name:'右侧'},{ang:Math.PI,name:'后侧'},{ang:3*Math.PI/2,name:'左侧'}];
+const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function clamp(v,a,b,d){return Number.isFinite(v)?Math.max(a,Math.min(b,v)):d}
+function fmt(v,d=2){return Number(v.toFixed(d)).toString()}
+function P(){const R=clamp(+E.R.value,1,15,4),H=clamp(+E.H.value,2,30,8);E.R.value=R;E.H.value=H;return{R,H}}
+function syncHeights(){const p=P();E.zA.max=p.H;E.zB.max=p.H;E.zA.value=clamp(+E.zA.value,0,p.H,Math.min(2,p.H));E.zB.value=clamp(+E.zB.value,0,p.H,Math.min(4.5,p.H));E.zARead.textContent=fmt(+E.zA.value,1);E.zBRead.textContent=fmt(+E.zB.value,1);E.aHeightInfo.textContent=`A 距杯口 = ${fmt(p.H-(+E.zA.value),1)}`;E.bHeightInfo.textContent=`B 距杯口 = ${fmt(p.H-(+E.zB.value),1)}`}
+function wrap(a){while(a<=-Math.PI)a+=TAU;while(a>Math.PI)a-=TAU;return a}
+function norm(a){a%=TAU;if(a<0)a+=TAU;return a}
+function smooth(t){t=clamp(t,0,1,0);return t*t*(3-2*t)}
+function ease(t){t=clamp(t,0,1,0);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+function lerp(a,b,t){return a+(b-a)*t}
+function deg(a){return Math.abs(a)*180/Math.PI}
+function selPoint(key){const p=P(),s=selection[key],ad=angleDefs[s.angIndex],z=key==='A'?+E.zA.value:+E.zB.value;return{ang:ad.ang,z,name:ad.name,angName:ad.name}}
+function updateSelectionText(){E.aInfo.textContent=selPoint('A').name;E.bInfo.textContent=selPoint('B').name}
+function setTarget(t){target=t;document.querySelectorAll('.targetBtn').forEach(b=>b.classList.toggle('active',b.dataset.target===t));E.stagePill.textContent=`点击灰色候选点选择 ${t} 的圆周位置`}
+function setReflect(v){reflectWhich=v;document.querySelectorAll('.reflectBtn').forEach(b=>b.classList.toggle('active',b.dataset.reflect===v));E.reflectNote.textContent=v==='B'?'保留原来的 A、B，把 B 关于杯口直线反射成 B′，连接 AB′。':'保留原来的 A、B，把 A 关于杯口直线反射成 A′，连接 A′B。';renderSteps();renderSchematic();draw()}
+
+function solve(){stopAnim();syncHeights();const p=P(),A=selPoint('A'),B=selPoint('B');let d=wrap(B.ang-A.ang);if(Math.abs(Math.abs(d)-Math.PI)<1e-9)d=Math.PI;const sSigned=p.R*d,s=Math.abs(sSigned),hA=p.H-A.z,hB=p.H-B.z,vertical=hA+hB,len=Math.hypot(s,vertical),ratio=vertical>1e-10?hA/vertical:.5,uP=sSigned*ratio,thetaP=norm(A.ang+uP/p.R),AP=Math.hypot(Math.abs(uP),hA),PB=Math.hypot(Math.abs(sSigned-uP),hB),twoWays=Math.abs(Math.abs(d)-Math.PI)<1e-8;
+  solution={p,A,B,d,sSigned,s,hA,hB,vertical,len,ratio,uP,thetaP,AP,PB,twoWays,zBase:Math.min(A.z,B.z)};
+  const dir=d>=0?'逆时针':'顺时针';
+  E.result.innerHTML=`最短路径：<strong>${fmt(len)}</strong><br>A 距杯底 ${fmt(A.z)}，距杯口 h<sub>A</sub>=${fmt(hA)}；B 距杯底 ${fmt(B.z)}，距杯口 h<sub>B</sub>=${fmt(hB)}。<br>圆周方向局部展开宽度 s=RΔθ=${fmt(p.R)}×${fmt(deg(d),1)}°×π/180=${fmt(s)}。<div class="formula">d<sub>min</sub>=√[s²+(h<sub>A</sub>+h<sub>B</sub>)²]=√[${fmt(s)}²+(${fmt(hA)}+${fmt(hB)})²]=${fmt(len)}</div><div class="note">只展开 A、B 两条母线之间的最短圆周部分；方向：${dir}${twoWays?'（半周时两侧等长）':''}。杯口交点 P 满足 AP≈${fmt(AP)}，PB≈${fmt(PB)}。</div>`;
+  renderSteps();renderSchematic();draw();
+}
+
+function renderSteps(){if(!solution)return;const s=solution;const ref=reflectWhich==='B'?'B':'A',refp=ref==='B'?'B′':'A′',straight=ref==='B'?'AB′':'A′B',eq=ref==='B'?'PB=PB′':'PA=PA′';E.steps.innerHTML=`
+<li><b>先确定局部展开宽度。</b>A、B 的最小圆心角 Δθ=${fmt(deg(s.d),1)}°，只保留这两条母线之间的局部曲面，因此横向长度 s=RΔθ=${fmt(s.s)}。</li>
+<li><b>确定 A、B 到杯口的距离。</b>A 距杯口 hA=H−zA=${fmt(s.hA)}；B 距杯口 hB=H−zB=${fmt(s.hB)}。</li>
+<li><b>把局部曲面摊平。</b>杯口变成一条直线 ℓ，原来的 A、B 两点都保留。杯面最短路线仍写成 A—P—B，其中 P 在杯口直线 ℓ 上。</li>
+<li><b>作${refp}。</b>把 ${ref} 关于杯口直线 ℓ 反射，得到 ${refp}，于是 ${eq}。</li>
+<li><b>将军饮马。</b>AP+PB 等于经过反射点的折线长度；当 ${straight} 是一条直线并与杯口交于 P 时最短，因此用勾股定理求 ${straight}。</li>`;
+E.keyText.innerHTML=reflectWhich==='B'?'<b>作 B′：</b>PB=PB′，所以 AP+PB=AP+PB′≥AB′。当 A、P、B′ 共线时取等号。':'<b>作 A′：</b>PA=PA′，所以 AP+PB=A′P+PB≥A′B。当 A′、P、B 共线时取等号。';
+E.equation.innerHTML=`横向：s=RΔθ=${fmt(s.s)}<br>纵向：hA+hB=${fmt(s.hA)}+${fmt(s.hB)}=${fmt(s.vertical)}<br>${straight}=√{s²+(hA+hB)²}=√{${fmt(s.s)}²+${fmt(s.vertical)}²}=${fmt(s.len)}`}
+
+function renderSchematic(){if(!solution)return;const s=solution,W=760,yr=205,xA=145,xB=615,maxH=Math.max(s.hA,s.hB,1),vScale=Math.min(126/maxH,8),yA=yr+s.hA*vScale,yB=yr+s.hB*vScale,yAp=yr-s.hA*vScale,yBp=yr-s.hB*vScale,xP=xA+(xB-xA)*s.ratio,reflectB=reflectWhich==='B';
+E.schematic.innerHTML=`
+<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#667085"/></marker></defs>
+<rect x="55" y="40" width="650" height="328" rx="16" fill="#fff" stroke="#e4e8ef"/>
+<rect x="95" y="${yr}" width="570" height="142" fill="#eef5ff" opacity=".68"/>
+<text x="105" y="${yr+30}" font-size="14" fill="#475467">A、B 之间的局部展开面</text>
+<line x1="95" y1="${yr}" x2="665" y2="${yr}" stroke="#ef8a17" stroke-width="4"/><text x="105" y="${yr-10}" font-size="15" font-weight="700" fill="#9a5b00">杯口直线 ℓ</text>
+<line x1="${xA}" y1="${yA}" x2="${xP}" y2="${yr}" stroke="#0f9f6e" stroke-width="4"/><line x1="${xP}" y1="${yr}" x2="${xB}" y2="${yB}" stroke="#0f9f6e" stroke-width="4"/><text x="380" y="348" text-anchor="middle" font-size="13" fill="#087653">原杯面路径 A—P—B（A、B 始终保留）</text>
+${reflectB?`<line x1="${xB}" y1="${yB}" x2="${xB}" y2="${yBp}" stroke="#98a2b3" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arr)"/><line x1="${xA}" y1="${yA}" x2="${xB}" y2="${yBp}" stroke="#7b61d1" stroke-width="5" stroke-linecap="round"/><circle cx="${xB}" cy="${yBp}" r="8" fill="#7b61d1" stroke="#fff" stroke-width="3"/><text x="${xB+13}" y="${yBp-7}" font-size="17" font-weight="800" fill="#654bc1">B′</text>`:`<line x1="${xA}" y1="${yA}" x2="${xA}" y2="${yAp}" stroke="#98a2b3" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arr)"/><line x1="${xA}" y1="${yAp}" x2="${xB}" y2="${yB}" stroke="#7b61d1" stroke-width="5" stroke-linecap="round"/><circle cx="${xA}" cy="${yAp}" r="8" fill="#7b61d1" stroke="#fff" stroke-width="3"/><text x="${xA-13}" y="${yAp-7}" text-anchor="end" font-size="17" font-weight="800" fill="#654bc1">A′</text>`}
+<circle cx="${xA}" cy="${yA}" r="8" fill="#2f6fed" stroke="#fff" stroke-width="3"/><text x="${xA-13}" y="${yA+25}" text-anchor="end" font-size="17" font-weight="800" fill="#1f56c9">A</text>
+<circle cx="${xB}" cy="${yB}" r="8" fill="#e5484d" stroke="#fff" stroke-width="3"/><text x="${xB+13}" y="${yB+24}" font-size="17" font-weight="800" fill="#c8383e">B</text>
+<circle cx="${xP}" cy="${yr}" r="8" fill="#ef8a17" stroke="#fff" stroke-width="3"/><text x="${xP}" y="${yr-14}" text-anchor="middle" font-size="17" font-weight="800" fill="#b56300">P</text>
+<line x1="${xA}" y1="365" x2="${xB}" y2="365" stroke="#667085" stroke-width="1.5" marker-end="url(#arr)"/><text x="380" y="388" text-anchor="middle" font-size="14" fill="#475467">局部展开宽度 s=RΔθ=${fmt(s.s)}</text>`}
+
+function circlePoint(ang,z){const p=P();return[p.R*Math.cos(ang),p.R*Math.sin(ang),z]}
+function basis(){return{u:[Math.cos(flatYaw),-Math.sin(flatYaw),0]}}
+function flatPoint(delta,z){const b=basis(),s=solution?solution.sSigned:0,u=P().R*delta-s/2;return[b.u[0]*u,b.u[1]*u,z]}
+function reflectedFlatPoint(delta,z){const q=flatPoint(delta,z),p=P();q[2]=2*p.H-z;return q}
+function morphLocal(delta,z,m){const A=selPoint('A'),p0=circlePoint(norm(A.ang+delta),z),p1=flatPoint(delta,z);return[lerp(p0[0],p1[0],m),lerp(p0[1],p1[1],m),lerp(p0[2],p1[2],m)]}
+function stageMorph(){return smooth((unfold-.18)/.55)}
+function reflectMorph(){return smooth((unfold-.72)/.28)}
+function flatVerticalExtent(){if(!solution){const p=P();return{bottom:0,top:p.H,span:p.H}}const s=solution,reflectTop=reflectWhich==='B'?2*s.p.H-s.B.z:2*s.p.H-s.A.z,bottom=Math.min(s.A.z,s.B.z),top=Math.max(s.p.H,reflectTop);return{bottom,top,span:Math.max(.5,top-bottom)}}
+function viewScale(){const p=P(),m=stageMorph(),flat=flatVerticalExtent(),flatW=solution?Math.max(solution.s,.9*p.R):2*p.R,spanX=lerp(2.75*p.R,flatW,m),spanZ=lerp(1.42*p.H,flat.span,m),pad=lerp(1.36,1.16,m);return Math.min(cv.width/Math.max(1,spanX*pad),cv.height/Math.max(1,spanZ*pad))*zoom}
+function rotateWorld(q){const p=P(),m=stageMorph(),flat=flatVerticalExtent(),cz=lerp(p.H/2,(flat.bottom+flat.top)/2,m);let x=q[0],y=q[1],z=q[2]-cz;const cy=Math.cos(yaw),sy=Math.sin(yaw),effectivePitch=lerp(pitch,-Math.PI/2,smooth(m)),cp=Math.cos(effectivePitch),sp=Math.sin(effectivePitch);let x1=cy*x-sy*y,y1=sy*x+cy*y;let y2=cp*y1-sp*z,z2=sp*y1+cp*z;return[x1,y2,z2]}
+function project(q){const r=rotateWorld(q),s=viewScale();return[cv.width/2+r[0]*s,cv.height*.52-r[1]*s,r[2]]}
+function line3(points,stroke,width=2,dash=[]){if(points.length<2)return;ctx.beginPath();points.forEach((q,i)=>{const p=project(q);i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([])}
+function fill3(points,fill,alpha=1){if(points.length<3)return;ctx.save();ctx.globalAlpha=alpha;ctx.beginPath();points.forEach((q,i)=>{const p=project(q);i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.restore()}
+function labelAt(q,text,color,dy=-12,alpha=1){const p=project(q);ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.font=`800 ${Math.max(13,cv.width/76)}px sans-serif`;ctx.textAlign='center';ctx.fillText(text,p[0],p[1]+dy);ctx.restore()}
+function dotAt(q,label,color,alpha=1,ghost=false){const p=project(q),r=Math.max(7,cv.width/150);ctx.save();ctx.globalAlpha=alpha;ctx.beginPath();ctx.arc(p[0],p[1],r,0,TAU);ctx.fillStyle=ghost?'rgba(255,255,255,.92)':color;ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=ghost?2.5:3;ctx.stroke();ctx.restore();labelAt(q,label,color,-r-7,alpha)}
+function resize(){const r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1),w=Math.max(320,Math.round(r.width*dpr)),h=Math.max(300,Math.round(r.width*.625*dpr));if(w!==lastW||h!==lastH){lastW=w;lastH=h;cv.width=w;cv.height=h}}
+
+function draw(){resize();ctx.clearRect(0,0,cv.width,cv.height);hitPoints=[];const m=stageMorph();drawFullCup(m);if(solution)drawLocalPatch(m);drawRoute(m);drawSelections(m);if(unfold<.08)drawCandidates();drawHover();updateStageText()}
+function drawFullCup(m){const p=P(),alpha=1-smooth((unfold-.08)/.34);if(alpha<=.01)return;ctx.save();ctx.globalAlpha=alpha;for(let j=0;j<=5;j++){const z=p.H*j/5,pts=[];for(let i=0;i<=72;i++)pts.push(circlePoint(TAU*i/72,z));line3(pts,'rgba(47,111,237,.34)',Math.max(1.1,cv.width/1100))}for(let k=0;k<16;k++){const th=TAU*k/16;line3([circlePoint(th,0),circlePoint(th,p.H)],'rgba(47,111,237,.20)',Math.max(1,cv.width/1400))}for(const z of [0,p.H]){const pts=[];for(let i=0;i<=80;i++)pts.push(circlePoint(TAU*i/80,z));line3(pts,z===p.H?'rgba(239,138,23,.9)':'rgba(58,73,94,.62)',Math.max(1.9,cv.width/580))}ctx.restore()}
+function drawLocalPatch(m){const s=solution,p=P(),alpha=.28+.72*smooth((unfold+.04)/.56),d=s.d,z0=s.zBase,flatAlpha=smooth((m-.68)/.32);if(flatAlpha>.01)fill3([morphLocal(0,z0,m),morphLocal(d,z0,m),morphLocal(d,p.H,m),morphLocal(0,p.H,m)],'#eaf1ff',.58*flatAlpha);ctx.save();ctx.globalAlpha=alpha;for(let j=0;j<=5;j++){const z=lerp(z0,p.H,j/5),pts=[];for(let i=0;i<=44;i++)pts.push(morphLocal(d*i/44,z,m));line3(pts,j===5?'#ef8a17':'rgba(47,111,237,.58)',j===5?Math.max(3,cv.width/330):Math.max(1.25,cv.width/920))}for(let k=0;k<=8;k++){const delta=d*k/8;line3([morphLocal(delta,z0,m),morphLocal(delta,p.H,m)],'rgba(47,111,237,.30)',Math.max(1.05,cv.width/1080))}ctx.restore();if(m>.78){const a=project(flatPoint(0,p.H)),b=project(flatPoint(d,p.H)),a0=project(flatPoint(0,z0)),b0=project(flatPoint(d,z0)),fade=smooth((m-.78)/.22);ctx.save();ctx.globalAlpha=fade;ctx.fillStyle='#9a5b00';ctx.font=`700 ${Math.max(12,cv.width/88)}px sans-serif`;ctx.textAlign='center';ctx.fillText('杯口 ℓ',(a[0]+b[0])/2,(a[1]+b[1])/2-12);const dimY=Math.min(cv.height-42,Math.max(a0[1],b0[1])+20);ctx.strokeStyle='rgba(71,84,103,.72)';ctx.lineWidth=Math.max(1.2,cv.width/900);ctx.setLineDash([6,5]);ctx.beginPath();ctx.moveTo(a0[0],dimY);ctx.lineTo(b0[0],dimY);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#475467';ctx.font=`700 ${Math.max(11,cv.width/95)}px sans-serif`;ctx.fillText(`s = RΔθ = ${fmt(s.s)}`,(a0[0]+b0[0])/2,Math.min(cv.height-18,dimY+22));ctx.restore()}}
+function routePts(){if(!solution)return null;const s=solution,N=28,dP=s.uP/s.p.R,out=[],inn=[];for(let i=0;i<=N;i++){const t=i/N;out.push(morphLocal(dP*t,lerp(s.A.z,s.p.H,t),stageMorph()))}for(let i=0;i<=N;i++){const t=i/N;inn.push(morphLocal(dP+(s.d-dP)*t,lerp(s.p.H,s.B.z,t),stageMorph()))}return{out,inn}}
+function drawRoute(m){if(!solution)return;const q=routePts(),greenW=Math.max(5.5,cv.width/205);line3(q.out,'#0f9f6e',greenW);line3(q.inn,'#0f9f6e',greenW);const s=solution,dP=s.uP/s.p.R,Pq=morphLocal(dP,s.p.H,m);dotAt(Pq,'P','#ef8a17',1);const rt=reflectMorph();if(rt>.01){const reflectB=reflectWhich==='B',orig=reflectB?flatPoint(s.d,s.B.z):flatPoint(0,s.A.z),ref=reflectB?reflectedFlatPoint(s.d,s.B.z):reflectedFlatPoint(0,s.A.z),moving=[lerp(orig[0],ref[0],rt),lerp(orig[1],ref[1],rt),lerp(orig[2],ref[2],rt)];if(rt>.35){const top=Math.max(s.p.H,moving[2]);fill3([flatPoint(0,s.p.H),flatPoint(s.d,s.p.H),flatPoint(s.d,top),flatPoint(0,top)],'#f5f2ff',.34*smooth((rt-.35)/.65))}line3([orig,moving],'rgba(123,97,209,.60)',Math.max(2,cv.width/470),[7,6]);dotAt(moving,reflectB?'B′':'A′','#7b61d1',rt);if(rt>.5){const start=reflectB?flatPoint(0,s.A.z):moving,end=reflectB?moving:flatPoint(s.d,s.B.z);ctx.save();ctx.globalAlpha=smooth((rt-.5)/.5);line3([start,end],'#7b61d1',Math.max(3.2,cv.width/285));ctx.restore()}}}
+function drawSelections(m){const s=solution,A=selPoint('A'),B=selPoint('B'),d=s?s.d:wrap(B.ang-A.ang),Aq=s?morphLocal(0,A.z,m):circlePoint(A.ang,A.z),Bq=s?morphLocal(d,B.z,m):circlePoint(B.ang,B.z);dotAt(Aq,'A','#2f6fed');dotAt(Bq,'B','#e5484d')}
+function candidateData(){const z=target==='A'?+E.zA.value:+E.zB.value;return angleDefs.map((a,i)=>({id:String(i),ai:i,ang:a.ang,z,name:a.name}))}
+function drawCandidates(){const current=selection[target].angIndex;for(const c of candidateData()){const p=project(circlePoint(c.ang,c.z)),selected=c.ai===current,hover=c.id===hoverId,r=Math.max(6,cv.width/215)+(hover?3:0);ctx.beginPath();ctx.arc(p[0],p[1],r,0,TAU);ctx.fillStyle=selected?(target==='A'?'#2f6fed':'#e5484d'):hover?'#475467':'rgba(71,84,103,.52)';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();hitPoints.push({...c,x:p[0],y:p[1],r:Math.max(18,cv.width/92)})}}
+function drawHover(){if(!hoverId||unfold>.08)return;const h=hitPoints.find(x=>x.id===hoverId);if(!h)return;const txt=`${target}：${h.name}`,w=Math.max(120,txt.length*17),x=Math.min(cv.width-w-12,Math.max(12,h.x+14)),y=Math.max(30,h.y-28);ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle='#d9e0ea';ctx.lineWidth=1;ctx.beginPath();ctx.rect(x,y-21,w,31);ctx.fill();ctx.stroke();ctx.fillStyle='#344054';ctx.font=`700 ${Math.max(12,cv.width/90)}px sans-serif`;ctx.textAlign='left';ctx.fillText(txt,x+8,y)}
+function updateStageText(){if(unfold<.04){E.modePill.textContent='3D 薄壁玻璃杯';E.stagePill.textContent=`点击候选点选择 ${target} 的圆周位置`}else if(unfold<.35){E.modePill.textContent='展开步骤 ①';E.stagePill.textContent='高亮 A、B 之间的最短圆周局部曲面'}else if(unfold<.72){E.modePill.textContent='展开步骤 ②';E.stagePill.textContent='其余杯壁淡出，局部曲面转到正视方向并摊平'}else if(unfold<.94){E.modePill.textContent='展开步骤 ③';E.stagePill.textContent=`原 A、B 保留；${reflectWhich==='B'?'B → B′':'A → A′'} 关于杯口反射`}else{E.modePill.textContent='展开步骤 ④';E.stagePill.textContent=`${reflectWhich==='B'?'A—P—B′':'A′—P—B'} 拉成直线，得到最短距离`}}
+
+function pickAt(cssX,cssY){if(unfold>.08)return;const rect=cv.getBoundingClientRect(),x=cssX*(cv.width/rect.width),y=cssY*(cv.height/rect.height);let best=null;for(const h of hitPoints){const d=Math.hypot(x-h.x,y-h.y);if(d<=h.r&&(!best||d<best.d))best={...h,d}}if(!best)return;selection[target]={angIndex:best.ai};if(target==='A')setTarget('B');else setTarget('A');updateSelectionText();unfold=0;E.progress.value=0;flatYaw=yaw;solve()}
+function hoverAt(cssX,cssY){if(unfold>.08){if(hoverId){hoverId=null;draw()}return}const rect=cv.getBoundingClientRect(),x=cssX*(cv.width/rect.width),y=cssY*(cv.height/rect.height);let best=null;for(const h of hitPoints){const d=Math.hypot(x-h.x,y-h.y);if(d<=h.r&&(!best||d<best.d))best={...h,d}}const id=best?best.id:null;if(id!==hoverId){hoverId=id;draw()}}
+function setPreset(name){const q=name==='same'?[0,0]:name==='quarter'?[0,1]:[0,2];selection.A={angIndex:q[0]};selection.B={angIndex:q[1]};updateSelectionText();setTarget('A');unfold=0;E.progress.value=0;flatYaw=yaw;solve()}
+function animateTo(v){stopAnim();if(!solution)solve();if(unfold<.03&&v>unfold)flatYaw=yaw;const from=unfold,start=performance.now(),dur=reduced?700:2800;function frame(now){const t=Math.min(1,(now-start)/dur);unfold=lerp(from,v,ease(t));E.progress.value=unfold;draw();if(t<1)anim=requestAnimationFrame(frame);else anim=null}anim=requestAnimationFrame(frame)}
+function stopAnim(){if(anim){cancelAnimationFrame(anim);anim=null}}
+
+updateSelectionText();syncHeights();
+document.querySelectorAll('.targetBtn').forEach(b=>b.addEventListener('click',()=>setTarget(b.dataset.target)));
+document.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>setPreset(b.dataset.preset)));
+document.querySelectorAll('.reflectBtn').forEach(b=>b.addEventListener('click',()=>setReflect(b.dataset.reflect)));
+[E.R,E.H].forEach(inp=>{inp.addEventListener('input',()=>{syncHeights();solve()});inp.addEventListener('change',()=>{syncHeights();solve()})});
+[E.zA,E.zB].forEach(inp=>inp.addEventListener('input',()=>{syncHeights();solve()}));
+E.solve.addEventListener('click',solve);E.animate.addEventListener('click',()=>animateTo(1));E.fold.addEventListener('click',()=>animateTo(0));E.progress.addEventListener('input',()=>{stopAnim();if(unfold<.03&&+E.progress.value>.03)flatYaw=yaw;unfold=+E.progress.value;draw()});
+E.yaw.addEventListener('input',()=>{yaw=+E.yaw.value*Math.PI/180;if(unfold<.03)flatYaw=yaw;draw()});E.pitch.addEventListener('input',()=>{pitch=+E.pitch.value*Math.PI/180;draw()});E.zoom.addEventListener('input',()=>{zoom=+E.zoom.value;draw()});E.resetView.addEventListener('click',()=>{yaw=32*Math.PI/180;pitch=-17*Math.PI/180;zoom=1;flatYaw=yaw;E.yaw.value=32;E.pitch.value=-17;E.zoom.value=1;draw()});
+cv.addEventListener('pointerdown',e=>{if(unfold>.08)return;cv.setPointerCapture(e.pointerId);drag={id:e.pointerId,x:e.clientX,y:e.clientY,yaw,pitch,moved:false}});
+cv.addEventListener('pointermove',e=>{const rect=cv.getBoundingClientRect();if(!drag){if(e.pointerType==='mouse')hoverAt(e.clientX-rect.left,e.clientY-rect.top);return}if(drag.id!==e.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>7)drag.moved=true;if(drag.moved){yaw=drag.yaw+dx*.008;pitch=Math.max(-1.13,Math.min(.96,drag.pitch+dy*.008));flatYaw=yaw;E.yaw.value=Math.round(yaw*180/Math.PI);E.pitch.value=Math.round(pitch*180/Math.PI);draw()}});
+cv.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const rect=cv.getBoundingClientRect(),moved=drag.moved;drag=null;if(!moved)pickAt(e.clientX-rect.left,e.clientY-rect.top)});cv.addEventListener('pointercancel',()=>drag=null);cv.addEventListener('pointerleave',()=>{if(!drag&&hoverId){hoverId=null;draw()}});
+cv.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.72,Math.min(1.65,zoom*(e.deltaY>0?.94:1.06)));E.zoom.value=zoom;draw()},{passive:false});
+let pinch=null;E.wrap.addEventListener('touchstart',e=>{if(e.touches.length===2)pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)},{passive:true});E.wrap.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinch){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);zoom=Math.max(.72,Math.min(1.65,zoom*d/pinch));pinch=d;E.zoom.value=zoom;draw()}},{passive:true});E.wrap.addEventListener('touchend',()=>pinch=null,{passive:true});
+new ResizeObserver(draw).observe(cv);solve();draw();
+})();
+</script>
+</body>
+</html>
+

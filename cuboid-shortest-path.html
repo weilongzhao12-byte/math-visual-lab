@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>长方体最短表面路径 · 三种展开 3D 交互演示</title>
+<style>
+:root{
+  --bg:#f5f7fb;--panel:#fff;--text:#172033;--muted:#667085;--line:#d8dee9;
+  --accent:#2f6fed;--accent2:#eaf1ff;--good:#0f9f6e;--good2:#e8f8f2;--warn:#d97706;--red:#e5484d;
+  --shadow:0 10px 28px rgba(16,24,40,.08);--radius:18px;
+}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif}
+body{padding:16px}.app{max-width:1240px;margin:auto}.hero{display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin:6px 0 14px}
+h1{font-size:clamp(24px,4vw,38px);margin:0 0 6px}.sub{color:var(--muted);line-height:1.65;font-size:14px;max-width:850px}.badge{background:var(--accent2);color:#1e55c8;border-radius:999px;padding:8px 12px;font-weight:700;font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.85fr);gap:14px}.panel{background:var(--panel);border:1px solid #e6e9ef;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;min-width:0}
+.canvasWrap{position:relative;border-radius:14px;overflow:hidden;background:linear-gradient(#fbfcff,#f4f7fb);border:1px solid #e4e8ef;touch-action:none;user-select:none}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;min-height:340px}.overlay{position:absolute;left:10px;top:10px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}.pill{background:rgba(255,255,255,.93);border:1px solid #e2e7ef;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:700;backdrop-filter:blur(5px)}
+.controls{display:grid;gap:12px}.section{border-top:1px solid #edf0f4;padding-top:12px}.section:first-child{border-top:0;padding-top:0}.section h2{font-size:16px;margin:0 0 9px}.row{display:grid;grid-template-columns:1fr 92px;gap:10px;align-items:center;margin:8px 0}.row label{font-size:13px;color:#475467}.row input[type=range]{width:100%;accent-color:var(--accent)}.row input[type=number]{width:100%;min-height:42px;border:1px solid #d7dde7;border-radius:10px;background:#fff;padding:8px 10px;font-size:16px;color:var(--text)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}.btn{min-height:44px;border:0;border-radius:12px;padding:10px 14px;font-size:14px;font-weight:800;cursor:pointer;background:#eef2f7;color:#253047}.btn.primary{background:var(--accent);color:white}.btn.good{background:var(--good2);color:#087653}.btn:disabled{opacity:.5;cursor:not-allowed}.btn:focus-visible,input:focus-visible,.plan:focus-visible{outline:3px solid rgba(47,111,237,.22);outline-offset:2px}
+.pickBox{border:1px solid #dfe5ee;background:#f8fafc;border-radius:14px;padding:10px 12px;line-height:1.65;font-size:13px}.pickState{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}.chip{border-radius:999px;padding:5px 9px;font-weight:800;background:#eef2f7}.chip.a{background:#eaf1ff;color:#1e55c8}.chip.b{background:#fff0f0;color:#b42318}.wait{color:var(--warn);font-weight:800}
+.plans{display:grid;gap:8px}.plan{width:100%;text-align:left;border:1px solid #dfe5ee;border-radius:14px;background:#fff;padding:10px 11px;cursor:pointer;color:inherit}.plan.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(47,111,237,.12)}.plan.best{background:#f2fbf7;border-color:#b7e6d5}.planHead{display:flex;justify-content:space-between;gap:8px;align-items:center}.planTitle{font-weight:900;font-size:14px}.tagMin{font-size:11px;border-radius:999px;padding:4px 7px;background:#dff6ec;color:#087653;font-weight:900;white-space:nowrap}.planFaces{font-size:12px;color:#667085;margin-top:3px}.planFormula{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;margin-top:6px;overflow-wrap:anywhere}.planLen{font-size:18px;font-weight:900;color:#173f84;margin-top:3px}
+.resultNote{background:#f8fafc;border:1px solid #e6ebf2;border-radius:14px;padding:11px 12px;line-height:1.6;font-size:13px;color:#475467}.resultNote strong{color:#0c6a4d}
+.note{font-size:12px;color:var(--muted);line-height:1.55}.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12px}.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:0}.footer{margin-top:14px;background:#101828;color:white;border-radius:15px;padding:13px 15px;line-height:1.65;font-size:13px}
+@media(max-width:900px){body{padding:10px}.grid{grid-template-columns:1fr}.panel{padding:11px}.controls{grid-template-columns:1fr 1fr;gap:10px}.controls .section{border-top:0;border:1px solid #edf0f4;border-radius:13px;padding:10px}.controls .section:last-child{grid-column:1/-1}}
+@media(max-width:640px){.controls{grid-template-columns:1fr}.controls .section:last-child{grid-column:auto}.row{grid-template-columns:1fr 84px}canvas{min-height:310px}.btn{flex:1 1 135px}.hero{align-items:flex-start}}
+</style>
+</head>
+<body>
+<nav style="padding:10px 16px;font:600 14px system-ui"><a href="./" style="color:#2563eb;background:transparent;padding:0;margin:0;text-decoration:none">← 返回数学实验室</a> <span style="color:#94a3b8"> | </span> <a href="./shortest-paths.html" style="color:#2563eb;text-decoration:none">最短距离目录</a></nav>
+<div class="app">
+  <div class="hero">
+    <div><h1>长方体最短表面路径 · 三种展开演示</h1><div class="sub">直接点击 3D 模型的顶点依次选择 A、B。若 A、B 是一组相对顶点，系统会同时给出三种经典展开方式，分别计算 AB，并标出最短方案。展开动画沿真实公共棱旋转，再平铺到当前视图对应的方向。</div></div>
+    <div class="badge">离线可用 · 触屏 / 鼠标均可</div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="canvasWrap" id="canvasWrap">
+        <canvas id="cv" width="1000" height="625" aria-label="长方体三维模型、顶点选择与表面展开动画"></canvas>
+        <div class="overlay"><span class="pill" id="modePill">3D 模型</span><span class="pill" id="pickPill">点击顶点选择 A</span></div>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#2f6fed"></i>起点 A</span>
+        <span><i class="dot" style="background:#e5484d"></i>终点 B</span>
+        <span><i class="dot" style="background:#0f9f6e"></i>表面路径 / 展开直线</span>
+        <span><i class="dot" style="background:#d97706"></i>展开公共棱</span>
+      </div>
+    </div>
+
+    <div class="panel controls">
+      <div class="section">
+        <h2>① 长方体尺寸</h2>
+        <div class="row"><label for="L">长 L</label><input id="L" type="number" min="0.5" max="30" step="0.5" value="8"></div>
+        <div class="row"><label for="W">宽 W</label><input id="W" type="number" min="0.5" max="30" step="0.5" value="5"></div>
+        <div class="row"><label for="H">高 H</label><input id="H" type="number" min="0.5" max="30" step="0.5" value="4"></div>
+      </div>
+
+      <div class="section">
+        <h2>② 点击顶点选择 A、B</h2>
+        <div class="pickBox">
+          <div class="pickState"><span class="chip a" id="aChip">A：V0 左后下</span><span class="chip b" id="bChip">B：V6 右前上</span></div>
+          <div id="pickHint" class="wait">下一次点击将重新选择 A 点</div>
+          <div class="note">轻点顶点＝选择；拖动空白或模型＝旋转视角。两指捏合或滚轮＝缩放。</div>
+        </div>
+        <div class="btns" style="margin-top:9px"><button class="btn" id="restartPick">从 A 重新选</button><button class="btn" id="swap">交换 A/B</button></div>
+      </div>
+
+      <div class="section">
+        <h2>③ 三种展开与长度</h2>
+        <div id="planNote" class="note" style="margin-bottom:8px"></div>
+        <div id="plans" class="plans"></div>
+      </div>
+
+      <div class="section">
+        <h2>④ 展开当前方案</h2>
+        <div class="btns"><button class="btn good" id="animate">▶ 演示展开</button><button class="btn" id="fold">↶ 收回 3D</button></div>
+        <div class="row"><label for="progress">手动展开</label><input id="progress" type="range" min="0" max="1" step="0.001" value="0"></div>
+        <div class="resultNote" id="resultNote" style="margin-top:8px"></div>
+      </div>
+
+      <div class="section">
+        <h2>⑤ 视角</h2>
+        <div class="row"><label for="yaw">左右旋转</label><input id="yaw" type="range" min="-180" max="180" step="1" value="35"></div>
+        <div class="row"><label for="pitch">上下旋转</label><input id="pitch" type="range" min="-80" max="80" step="1" value="-20"></div>
+        <div class="row"><label for="zoom">缩放</label><input id="zoom" type="range" min="0.65" max="1.8" step="0.01" value="1"></div>
+        <div class="btns"><button class="btn" id="resetView">重置视角</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer"><b>课堂重点：</b>在立体表面上，A→B 往往是“折线”；沿公共棱把两个面展开后，这条折线会被拉直成同一条直线。因此比较三种展开图里的直线 AB 长度，就能得到真正的最短表面路径。</div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const cv=$('#cv'),ctx=cv.getContext('2d');
+const els={L:$('#L'),W:$('#W'),H:$('#H'),plans:$('#plans'),planNote:$('#planNote'),animate:$('#animate'),fold:$('#fold'),progress:$('#progress'),yaw:$('#yaw'),pitch:$('#pitch'),zoom:$('#zoom'),resetView:$('#resetView'),restartPick:$('#restartPick'),swap:$('#swap'),aChip:$('#aChip'),bChip:$('#bChip'),pickHint:$('#pickHint'),modePill:$('#modePill'),pickPill:$('#pickPill'),resultNote:$('#resultNote')};
+
+const V=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+const vNames=['V0 左后下','V1 右后下','V2 右前下','V3 左前下','V4 左后上','V5 右后上','V6 右前上','V7 左前上'];
+const faces={z0:[0,1,2,3],z1:[4,7,6,5],y0:[0,4,5,1],y1:[3,2,6,7],x0:[0,3,7,4],x1:[1,5,6,2]};
+const faceLabels={z0:'底面',z1:'顶面',y0:'后面',y1:'前面',x0:'左面',x1:'右面'};
+const normals={z0:[0,0,-1],z1:[0,0,1],y0:[0,-1,0],y1:[0,1,0],x0:[-1,0,0],x1:[1,0,0]};
+const axisOrder={z:0,y:1,x:2};
+
+let yaw=35*Math.PI/180,pitch=-20*Math.PI/180,zoom=1;
+let A=0,B=6,pickNext='A',hoverV=null;
+let candidates=[],activeIndex=0,unfold=0,anim=null;
+let pointers=new Map(),gesture=null;
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function num(v,a,b,d){v=+v;return Number.isFinite(v)?clamp(v,a,b):d}
+function dims(){return [num(els.L.value,.5,30,8),num(els.W.value,.5,30,5),num(els.H.value,.5,30,4)]}
+function p3(i){const [L,W,H]=dims(),q=V[i];return[q[0]*L/2,q[1]*W/2,q[2]*H/2]}
+function add(a,b){return[a[0]+b[0],a[1]+b[1],a[2]+b[2]]}
+function sub(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]]}
+function mul(a,s){return[a[0]*s,a[1]*s,a[2]*s]}
+function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
+function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]}
+function norm(a){const d=Math.hypot(...a)||1;return[a[0]/d,a[1]/d,a[2]/d]}
+function dist3(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2])}
+function dist2(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1])}
+function lerp(a,b,t){return a+(b-a)*t}
+function lerp2(a,b,t){return[lerp(a[0],b[0],t),lerp(a[1],b[1],t)]}
+function lerp3(a,b,t){return[lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)]}
+function ease(t){t=clamp(t,0,1);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+function smooth(a,b,t){return ease((t-a)/(b-a))}
+function fmt(v){return (Math.round(v*1000)/1000).toString()}
+
+function rotateView(p){let[x,y,z]=p;const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);const x1=cy*x-sy*y,y1=sy*x+cy*y;const y2=cp*y1-sp*z,z2=sp*y1+cp*z;return[x1,y2,z2]}
+function project(p){const [x,y,z]=rotateView(p),s=42*zoom*Math.min(cv.width/1000,cv.height/625);return[cv.width/2+x*s,cv.height*.53-y*s,z]}
+function rotateVecAroundAxis(v,axis,ang){axis=norm(axis);const c=Math.cos(ang),s=Math.sin(ang);return add(add(mul(v,c),mul(cross(axis,v),s)),mul(axis,dot(axis,v)*(1-c)))}
+function rotatePointAroundLine(p,o,axis,ang){return add(o,rotateVecAroundAxis(sub(p,o),axis,ang))}
+function faceOfVertex(i){return Object.keys(faces).filter(f=>faces[f].includes(i))}
+function edgeKey(a,b){return a<b?a+'-'+b:b+'-'+a}
+function faceEdges(f){const q=faces[f];return q.map((v,i)=>[v,q[(i+1)%4]])}
+function sharedEdge(f,g){const m=new Map(faceEdges(f).map(e=>[edgeKey(...e),e]));for(const e of faceEdges(g)){const k=edgeKey(...e);if(m.has(k))return m.get(k)}return null}
+function edgeAxis(edge){const a=p3(edge[0]),b=p3(edge[1]);const d=sub(b,a);if(Math.abs(d[0])>1e-8)return'x';if(Math.abs(d[1])>1e-8)return'y';return'z'}
+function isOpposite(a,b){return V[a][0]===-V[b][0]&&V[a][1]===-V[b][1]&&V[a][2]===-V[b][2]}
+
+function faceBasis(f){const q=faces[f],o=p3(q[0]),e1=norm(sub(p3(q[1]),o)),n=norm(normals[f]);let e2=norm(cross(n,e1));
+  // 保证第二条边在 e2 正向上，避免镜像突变
+  if(dot(sub(p3(q[3]),o),e2)<0)e2=mul(e2,-1);
+  return{o,e1,e2,n};
+}
+function localOf(p,basis){const d=sub(p,basis.o);return[dot(d,basis.e1),dot(d,basis.e2)]}
+function segIntersect(a,b,c,d){
+  const r=[b[0]-a[0],b[1]-a[1]],s=[d[0]-c[0],d[1]-c[1]];
+  const den=r[0]*s[1]-r[1]*s[0],q=[c[0]-a[0],c[1]-a[1]];
+  if(Math.abs(den)<1e-10)return null;
+  const t=(q[0]*s[1]-q[1]*s[0])/den,u=(q[0]*r[1]-q[1]*r[0])/den;
+  if(t>=-1e-8&&t<=1+1e-8&&u>=-1e-8&&u<=1+1e-8)return{t:clamp(t,0,1),u:clamp(u,0,1),p:[a[0]+r[0]*t,a[1]+r[1]*t]};
+  return null;
+}
+
+function buildCandidate(fA,fB){
+  const same=fA===fB,basis=faceBasis(fA),localByFace={};
+  localByFace[fA]={};for(const v of faces[fA])localByFace[fA][v]=localOf(p3(v),basis);
+  let hinge=null,axis=null,rotSign=0,moveFinal={},hit=null;
+  if(!same){
+    hinge=sharedEdge(fA,fB);if(!hinge)return null;axis=edgeAxis(hinge);
+    const o=p3(hinge[0]),ax=norm(sub(p3(hinge[1]),o));
+    const nb=norm(normals[fB]),na=norm(normals[fA]);
+    const dPlus=dot(rotateVecAroundAxis(nb,ax,Math.PI/2),na),dMinus=dot(rotateVecAroundAxis(nb,ax,-Math.PI/2),na);
+    rotSign=dPlus>=dMinus?1:-1;
+    localByFace[fB]={};
+    for(const v of faces[fB]){const rp=rotatePointAroundLine(p3(v),o,ax,rotSign*Math.PI/2);moveFinal[v]=rp;localByFace[fB][v]=localOf(rp,basis)}
+  }
+  const la=localByFace[fA][A];
+  const lb=same?localByFace[fA][B]:localByFace[fB][B];
+  if(!la||!lb)return null;
+  if(!same){
+    const hu=localByFace[fA][hinge[0]],hv=localByFace[fA][hinge[1]];
+    hit=segIntersect(la,lb,hu,hv);
+    const bOnHinge=dist2(lb,hu)<1e-7||dist2(lb,hv)<1e-7;
+    const aOnHinge=dist2(la,hu)<1e-7||dist2(la,hv)<1e-7;
+    if(!hit&&!aOnHinge&&!bOnHinge)return null;
+    if(!hit){
+      if(aOnHinge)hit={t:0,u:dist2(la,hu)/Math.max(1e-9,dist2(hu,hv)),p:la};
+      else hit={t:1,u:dist2(lb,hu)/Math.max(1e-9,dist2(hu,hv)),p:lb};
+    }
+  }
+  const len=dist2(la,lb),du=Math.abs(lb[0]-la[0]),dv=Math.abs(lb[1]-la[1]);
+  return{fA,fB,same,basis,hinge,axis,rotSign,moveFinal,localByFace,A2:la,B2:lb,hit,len,du,dv};
+}
+
+function candidateLabel(c,i){
+  if(isOpposite(A,B)){
+    if(c.axis==='z')return{title:'方案①：长 + 宽，配高',formula:`√((${fmt(dims()[0])}+${fmt(dims()[1])})² + ${fmt(dims()[2])}²)`};
+    if(c.axis==='y')return{title:'方案②：长 + 高，配宽',formula:`√((${fmt(dims()[0])}+${fmt(dims()[2])})² + ${fmt(dims()[1])}²)`};
+    if(c.axis==='x')return{title:'方案③：宽 + 高，配长',formula:`√((${fmt(dims()[1])}+${fmt(dims()[2])})² + ${fmt(dims()[0])}²)`};
+  }
+  return{title:`方案 ${i+1}`,formula:`√(${fmt(c.du)}² + ${fmt(c.dv)}²)`};
+}
+
+function recompute(resetProgress=true){
+  stopAnim();if(resetProgress){unfold=0;els.progress.value='0'}
+  candidates=[];
+  if(A==null||B==null||A===B){renderPlans();draw();return}
+  const fA=faceOfVertex(A),fB=faceOfVertex(B),all=[];
+  for(const fa of fA)for(const fb of fB){
+    if(fa===fb||sharedEdge(fa,fb)){const c=buildCandidate(fa,fb);if(c)all.push(c)}
+  }
+  if(isOpposite(A,B)){
+    const groups={x:[],y:[],z:[]};
+    all.filter(c=>!c.same).forEach(c=>groups[c.axis].push(c));
+    // 每类有镜像的两种摆法；选择一组代表，三类分别对应三种长度公式
+    candidates=['z','y','x'].map(ax=>groups[ax][0]).filter(Boolean);
+  }else{
+    // 非体对角顶点：保留最多三种长度不同、几何有效的典型展开
+    all.sort((a,b)=>a.len-b.len||(+a.same)-(+b.same));
+    const seen=[];
+    for(const c of all){
+      const key=Math.round(c.len*1e7)/1e7;
+      if(!seen.some(s=>Math.abs(s-key)<1e-7)){candidates.push(c);seen.push(key)}
+      if(candidates.length>=3)break;
+    }
+    if(candidates.length===0&&all.length)candidates.push(all[0]);
+  }
+  if(!candidates.length){activeIndex=0;renderPlans();draw();return}
+  let min=Math.min(...candidates.map(c=>c.len));
+  candidates.forEach((c,i)=>{c.isMin=Math.abs(c.len-min)<1e-7;c.meta=candidateLabel(c,i)});
+  const old=candidates[activeIndex];
+  activeIndex=Math.max(0,candidates.findIndex(c=>c.isMin));
+  renderPlans();draw();
+}
+
+function renderPlans(){
+  els.aChip.textContent='A：'+(A==null?'未选择':vNames[A]);
+  els.bChip.textContent='B：'+(B==null?'未选择':vNames[B]);
+  els.pickHint.textContent=pickNext==='A'?'下一次点击将选择 / 重新选择 A 点':'请再点击另一个顶点作为 B 点';
+  els.pickPill.textContent=pickNext==='A'?'点击顶点选择 A':'点击顶点选择 B';
+  els.plans.innerHTML='';
+  if(A==null||B==null){els.planNote.textContent='请在模型上依次点击两个顶点。';els.resultNote.textContent='选择完成后，这里会显示展开方案与最短长度。';return}
+  if(isOpposite(A,B))els.planNote.textContent='当前 A、B 为相对顶点：恰有三类经典展开。点击任一方案即可在 3D 模型中查看对应的两个面。';
+  else els.planNote.textContent='当前不是一组体对角顶点。系统列出最多三种典型有效展开；“三种经典公式”只在相对顶点时固定出现。';
+  if(!candidates.length){els.resultNote.textContent='当前选点未生成有效展开方案。';return}
+  candidates.forEach((c,i)=>{
+    const btn=document.createElement('button');btn.type='button';btn.className='plan'+(i===activeIndex?' active':'')+(c.isMin?' best':'');
+    const minTag=c.isMin?'<span class="tagMin">'+(candidates.filter(x=>x.isMin).length>1?'并列最短':'最短')+'</span>':'';
+    btn.innerHTML=`<div class="planHead"><span class="planTitle">${c.meta.title}</span>${minTag}</div><div class="planFaces">${faceLabels[c.fA]}${c.same?'':' + '+faceLabels[c.fB]}</div><div class="planFormula">AB = ${c.meta.formula}</div><div class="planLen">= ${fmt(c.len)}</div>`;
+    btn.addEventListener('click',()=>{stopAnim();activeIndex=i;unfold=0;els.progress.value='0';renderPlans();draw()});
+    els.plans.appendChild(btn);
+  });
+  const c=candidates[activeIndex];
+  els.resultNote.innerHTML=c?`当前：<strong>${c.meta.title}</strong>，${faceLabels[c.fA]}${c.same?'':' 与 '+faceLabels[c.fB]}。${c.same?'A、B 本来就在同一面上。':'先沿橙色公共棱把第二个面旋开 90°，表面折线会逐渐拉直。'} AB = <strong>${fmt(c.len)}</strong>${c.isMin?'（最短）':''}`:'';
+}
+
+function finalLayout(c){
+  const pts=[];for(const f of [c.fA,...(c.same?[]:[c.fB])])for(const v of faces[f]){const p=c.localByFace[f][v];pts.push(p)}
+  const oP=project(c.basis.o),uP=project(add(c.basis.o,c.basis.e1)),vP=project(add(c.basis.o,c.basis.e2));
+  let U=[uP[0]-oP[0],uP[1]-oP[1]],ul=Math.hypot(...U)||1;U=[U[0]/ul,U[1]/ul];
+  const rawV=[vP[0]-oP[0],vP[1]-oP[1]];let V2=[-U[1],U[0]];if(V2[0]*rawV[0]+V2[1]*rawV[1]<0)V2=[-V2[0],-V2[1]];
+  const raw=pts.map(p=>[p[0]*U[0]+p[1]*V2[0],p[0]*U[1]+p[1]*V2[1]]);
+  const xs=raw.map(p=>p[0]),ys=raw.map(p=>p[1]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const sw=maxX-minX||1,sh=maxY-minY||1,scale=Math.min(cv.width*.72/sw,cv.height*.62/sh),cx=cv.width*.50,cy=cv.height*.55;
+  const mid=[(minX+maxX)/2,(minY+maxY)/2];
+  function map(p){const q=[p[0]*U[0]+p[1]*V2[0],p[0]*U[1]+p[1]*V2[1]];return[cx+(q[0]-mid[0])*scale,cy+(q[1]-mid[1])*scale]}
+  return{map,U,V2,scale};
+}
+
+function movingPoint(c,v,h){
+  if(c.same||!c.localByFace[c.fB]||!faces[c.fB].includes(v))return p3(v);
+  const o=p3(c.hinge[0]),ax=norm(sub(p3(c.hinge[1]),o));
+  return rotatePointAroundLine(p3(v),o,ax,c.rotSign*Math.PI/2*h);
+}
+function screenVertex(c,f,v,t,layout){
+  const h=c.same?0:smooth(.14,.60,t),flat=smooth(.60,.88,t);
+  const wp=(f===c.fB&&!c.same)?movingPoint(c,v,h):p3(v),p=project(wp);
+  if(flat<=0)return[p[0],p[1]];
+  const target=layout.map(c.localByFace[f][v]);return lerp2([p[0],p[1]],target,flat);
+}
+function routePoints(c,t,layout){
+  const flat=smooth(.60,.88,t),h=c.same?0:smooth(.14,.60,t);
+  const Aw=p3(A),Bw=c.same?p3(B):movingPoint(c,B,h),A3=project(Aw),B3=project(Bw);
+  const At=layout.map(c.A2),Bt=layout.map(c.B2);
+  let As=flat?lerp2([A3[0],A3[1]],At,flat):[A3[0],A3[1]];
+  let Bs=flat?lerp2([B3[0],B3[1]],Bt,flat):[B3[0],B3[1]];
+  if(c.same)return{A:As,B:Bs,P:null};
+  const u=c.hit.u,Pw=lerp3(p3(c.hinge[0]),p3(c.hinge[1]),u),P3=project(Pw),Pt=layout.map(c.hit.p),Ps=flat?lerp2([P3[0],P3[1]],Pt,flat):[P3[0],P3[1]];
+  return{A:As,B:Bs,P:Ps};
+}
+
+function drawPoly(poly,fill,stroke,lw=1.5,alpha=1){ctx.save();ctx.globalAlpha=alpha;ctx.beginPath();ctx.moveTo(poly[0][0],poly[0][1]);for(let i=1;i<poly.length;i++)ctx.lineTo(poly[i][0],poly[i][1]);ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke();ctx.restore()}
+function faceDepth(f){return faces[f].reduce((s,v)=>s+project(p3(v))[2],0)/4}
+function draw(){
+  const dpr=Math.min(2,window.devicePixelRatio||1),r=cv.getBoundingClientRect(),W=Math.max(320,Math.round(r.width*dpr)),H=Math.max(280,Math.round(r.width*.625*dpr));if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H}
+  ctx.clearRect(0,0,cv.width,cv.height);ctx.lineJoin='round';ctx.lineCap='round';
+  const c=candidates[activeIndex]||null,t=unfold,layout=c?finalLayout(c):null;
+  const activeFaces=c?[c.fA,...(c.same?[]:[c.fB])]:[];
+  const fadeOthers=c?smooth(.03,.46,t):0;
+  const order=Object.keys(faces).map(f=>({f,z:faceDepth(f)})).sort((a,b)=>a.z-b.z);
+  for(const {f} of order){
+    const active=activeFaces.includes(f);let alpha=active?1:(1-.84*fadeOthers);
+    let poly;
+    if(c&&active){poly=faces[f].map(v=>screenVertex(c,f,v,t,layout));}
+    else poly=faces[f].map(v=>{const p=project(p3(v));return[p[0],p[1]]});
+    const fill=active?'rgba(77,120,196,.17)':'rgba(148,163,184,.10)';
+    const stroke=active?'rgba(54,86,145,.90)':'rgba(116,127,145,.52)';
+    drawPoly(poly,fill,stroke,active?2.8:1.4,alpha);
+    if(c&&active&&t>.70){const cc=poly.reduce((s,p)=>[s[0]+p[0]/poly.length,s[1]+p[1]/poly.length],[0,0]);ctx.save();ctx.globalAlpha=clamp((t-.70)/.15,0,1);ctx.fillStyle='#465467';ctx.font=`700 ${Math.max(12,cv.width/78)}px sans-serif`;ctx.textAlign='center';ctx.fillText(faceLabels[f],cc[0],cc[1]);ctx.restore()}
+  }
+  if(c&&!c.same){
+    const h0=screenVertex(c,c.fA,c.hinge[0],t,layout),h1=screenVertex(c,c.fA,c.hinge[1],t,layout);
+    ctx.save();ctx.setLineDash([10,7]);ctx.strokeStyle='#d97706';ctx.lineWidth=Math.max(3,cv.width/300);ctx.beginPath();ctx.moveTo(...h0);ctx.lineTo(...h1);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#a15c05';ctx.font=`700 ${Math.max(11,cv.width/88)}px sans-serif`;ctx.textAlign='center';ctx.fillText('公共棱', (h0[0]+h1[0])/2, (h0[1]+h1[1])/2-8);ctx.restore();
+  }
+  if(c){
+    const rp=routePoints(c,t,layout);ctx.save();ctx.strokeStyle='#0f9f6e';ctx.lineWidth=Math.max(4,cv.width/220);ctx.beginPath();ctx.moveTo(...rp.A);if(rp.P)ctx.lineTo(...rp.P);ctx.lineTo(...rp.B);ctx.stroke();ctx.restore();
+    if(t>.88){const q=smooth(.88,1,t),end=lerp2(rp.A,rp.B,q);ctx.save();ctx.strokeStyle='#087653';ctx.lineWidth=Math.max(6,cv.width/185);ctx.beginPath();ctx.moveTo(...rp.A);ctx.lineTo(...end);ctx.stroke();ctx.restore();if(q>.55){ctx.save();ctx.fillStyle='#087653';ctx.font=`800 ${Math.max(13,cv.width/72)}px sans-serif`;ctx.textAlign='center';ctx.fillText(`AB = ${fmt(c.len)}${c.isMin?'  最短':''}`,(rp.A[0]+rp.B[0])/2,(rp.A[1]+rp.B[1])/2-12);ctx.restore()}}
+  }
+  drawVertices(c,t,layout);
+  if(t<.14)els.modePill.textContent='3D 模型 · 高亮当前方案';
+  else if(t<.60)els.modePill.textContent='沿公共棱展开 '+Math.round(smooth(.14,.60,t)*90)+'°';
+  else if(t<.88)els.modePill.textContent='保持方向 · 平铺到视图';
+  else els.modePill.textContent='展开图 · AB 为直线';
+}
+
+function vertexScreen(i,c,t,layout){
+  if(c){
+    if(faces[c.fA].includes(i))return screenVertex(c,c.fA,i,t,layout);
+    if(!c.same&&faces[c.fB].includes(i))return screenVertex(c,c.fB,i,t,layout);
+  }
+  const p=project(p3(i));return[p[0],p[1]];
+}
+function drawVertices(c,t,layout){
+  const fade=c?smooth(.03,.46,t):0;
+  for(let i=0;i<8;i++){
+    const active=c&&(faces[c.fA].includes(i)||(!c.same&&faces[c.fB].includes(i)));
+    if(c&&!active&&fade>.75)continue;
+    const p=vertexScreen(i,c,t,layout),selected=i===A||i===B,hover=i===hoverV&&unfold<.05;
+    const r=Math.max(selected?9:6,cv.width/(selected?135:190))+(hover?3:0);
+    ctx.save();ctx.globalAlpha=(c&&!active)?1-.75*fade:1;ctx.beginPath();ctx.arc(p[0],p[1],r,0,Math.PI*2);ctx.fillStyle=i===A?'#2f6fed':i===B?'#e5484d':hover?'#f59e0b':'#98a2b3';ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2.5;ctx.stroke();
+    if(selected||hover){ctx.fillStyle=i===A?'#1e55c8':i===B?'#b42318':'#7c4a03';ctx.font=`800 ${Math.max(13,cv.width/74)}px sans-serif`;ctx.textAlign='center';ctx.fillText(i===A?'A':i===B?'B':`V${i}`,p[0],p[1]-15)}
+    ctx.restore();
+  }
+}
+
+function nearestVertex(x,y,limit=28){let best=null,bd=Infinity;for(let i=0;i<8;i++){const p=project(p3(i)),d=Math.hypot(p[0]-x,p[1]-y);if(d<bd){bd=d;best=i}}return bd<=limit*(window.devicePixelRatio||1)?best:null}
+function eventPos(e){const r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;return[(e.clientX-r.left)*sx,(e.clientY-r.top)*sy]}
+function chooseVertex(v){
+  if(v==null||unfold>.03)return;
+  if(pickNext==='A'){
+    A=v;B=null;pickNext='B';activeIndex=0;recompute();
+  }else{
+    if(v===A){els.pickHint.textContent='B 不能与 A 重合，请点击另一个顶点';return}
+    B=v;pickNext='A';activeIndex=0;recompute();
+  }
+}
+
+function animateTo(target){stopAnim();const from=unfold,start=performance.now(),dur=target>from?1900:900;function step(now){const q=Math.min(1,(now-start)/dur);unfold=lerp(from,target,ease(q));els.progress.value=unfold;draw();if(q<1)anim=requestAnimationFrame(step);else anim=null}anim=requestAnimationFrame(step)}
+function stopAnim(){if(anim){cancelAnimationFrame(anim);anim=null}}
+
+['L','W','H'].forEach(k=>els[k].addEventListener('change',()=>{recompute()}));
+els.animate.addEventListener('click',()=>{if(candidates.length)animateTo(1)});els.fold.addEventListener('click',()=>animateTo(0));
+els.progress.addEventListener('input',()=>{stopAnim();unfold=+els.progress.value;draw()});
+els.yaw.addEventListener('input',()=>{yaw=+els.yaw.value*Math.PI/180;draw()});els.pitch.addEventListener('input',()=>{pitch=+els.pitch.value*Math.PI/180;draw()});els.zoom.addEventListener('input',()=>{zoom=+els.zoom.value;draw()});
+els.resetView.addEventListener('click',()=>{yaw=35*Math.PI/180;pitch=-20*Math.PI/180;zoom=1;els.yaw.value=35;els.pitch.value=-20;els.zoom.value=1;draw()});
+els.restartPick.addEventListener('click',()=>{stopAnim();A=null;B=null;pickNext='A';unfold=0;els.progress.value=0;candidates=[];activeIndex=0;renderPlans();draw()});
+els.swap.addEventListener('click',()=>{if(A==null||B==null)return;const t=A;A=B;B=t;pickNext='A';activeIndex=0;recompute()});
+
+cv.addEventListener('wheel',e=>{e.preventDefault();zoom=clamp(zoom*(e.deltaY>0?.94:1.06),.65,1.8);els.zoom.value=zoom;draw()},{passive:false});
+cv.addEventListener('pointerdown',e=>{
+  cv.setPointerCapture(e.pointerId);const p=eventPos(e);pointers.set(e.pointerId,{x:p[0],y:p[1],cx:e.clientX,cy:e.clientY});
+  if(pointers.size===1){gesture={type:'maybe',id:e.pointerId,startX:e.clientX,startY:e.clientY,lastX:e.clientX,lastY:e.clientY,yaw,pitch,moved:false}}
+  else if(pointers.size===2){const a=[...pointers.values()];gesture={type:'pinch',startDist:Math.hypot(a[0].cx-a[1].cx,a[0].cy-a[1].cy),startZoom:zoom}}
+});
+cv.addEventListener('pointermove',e=>{
+  const rec=pointers.get(e.pointerId);
+  if(rec){rec.cx=e.clientX;rec.cy=e.clientY;const pp=eventPos(e);rec.x=pp[0];rec.y=pp[1]}
+  if(pointers.size===2&&gesture&&gesture.type==='pinch'){
+    const a=[...pointers.values()],d=Math.hypot(a[0].cx-a[1].cx,a[0].cy-a[1].cy);zoom=clamp(gesture.startZoom*d/Math.max(1,gesture.startDist),.65,1.8);els.zoom.value=zoom;draw();return;
+  }
+  if(gesture&&gesture.type==='maybe'&&gesture.id===e.pointerId){const dx=e.clientX-gesture.startX,dy=e.clientY-gesture.startY;if(Math.hypot(dx,dy)>6){gesture.moved=true;if(unfold<.92){yaw=gesture.yaw+dx*.008;pitch=clamp(gesture.pitch+dy*.008,-1.35,1.35);els.yaw.value=Math.round(yaw*180/Math.PI);els.pitch.value=Math.round(pitch*180/Math.PI);draw()}}}
+  if(e.pointerType==='mouse'&&e.buttons===0&&unfold<.05){const p=eventPos(e),nv=nearestVertex(p[0],p[1]);if(nv!==hoverV){hoverV=nv;draw()}}
+});
+function endPointer(e){
+  const rec=pointers.get(e.pointerId);const wasTap=gesture&&gesture.type==='maybe'&&gesture.id===e.pointerId&&!gesture.moved&&pointers.size===1;
+  if(wasTap&&rec){const nv=nearestVertex(rec.x,rec.y,32);chooseVertex(nv)}
+  pointers.delete(e.pointerId);if(pointers.size===0)gesture=null;else if(pointers.size===1){const only=[...pointers.entries()][0];gesture={type:'maybe',id:only[0],startX:only[1].cx,startY:only[1].cy,yaw,pitch,moved:true}}
+}
+cv.addEventListener('pointerup',endPointer);cv.addEventListener('pointercancel',endPointer);cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&!pointers.size){hoverV=null;draw()}});
+
+new ResizeObserver(draw).observe(cv);
+recompute();
+})();
+</script>
+</body>
+</html>
+
